@@ -62,8 +62,13 @@ because on this data no such threshold exists.
 
 ---
 
-## 2026-10-07 — Canonical ingest pass (C3)
+## 2026-10-07 — Canonical ingest pass, **v1** (C3)
 
+**Superseded by v2 below.** Kept because the iteration is the point: the eval
+found a prompt defect, the prompt changed, and the numbers moved. Deleting the
+"before" would hide the only evidence that the loop works.
+
+**Adjudication prompt:** `v1-b492db6f`
 **Basis:** 55 requests through the full pipeline, 52 live adjudication calls,
 `T_auto` 0.8 (placeholder). Scored **pairwise** against the labels: for each
 pair of requests, did the pipeline group them, and should it have?
@@ -119,6 +124,87 @@ is the flip side of the exactness that design bought: the sweep trades
 auto-precision against review load, and nothing else. Improving recall means
 editing the prompt, which changes its content hash and invalidates all 52
 adjudication fixtures.
+
+---
+
+## 2026-10-07 — Canonical ingest pass, **v2** (C3, after the prompt fix)
+
+**Adjudication prompt:** `v1-76fa765d` (was `v1-b492db6f`)
+**Basis:** same 55 requests, same corpus, same `T_auto` 0.8, 54 fresh
+adjudication calls. Only the adjudication prompt changed.
+
+| metric | v1 | **v2** | |
+|---|---|---|---|
+| all-band precision | 0.974 | **1.000** | ↑ |
+| all-band recall | 0.319 | **0.466** | ↑ 46% |
+| auto-band precision | 1.000 | **1.000** | — |
+| auto-band recall | 0.233 | **0.333** | ↑ |
+| problems formed (truth 12) | 31 | **23** | ↓ |
+| planted disjoint pairs caught | 6/11 | **8/11** | ↑ |
+| **related-but-distinct wrongly merged** | 1/3 | **0/3** | ↓ |
+| false merges, whole corpus | 1 | **0** | ↓ |
+
+**The fix did not trade recall for false merges — it improved both.** Recall
+rose 46% while precision rose to 1.000 and the counter-risk went the right way:
+v1's single false merge (`r03a/r09a`, approval controls vs. approve-from-email)
+is gone, and all three related-but-distinct pairs stayed distinct.
+
+That the two moved together is the useful signal. A prompt that splits genuine
+duplicates on wording is not being *cautious* — it is being inaccurate, and it
+was getting the adjacent pairs wrong too.
+
+### The two changes, and why each follows from the definition
+
+Made without consulting the labels, and justified by what a duplicate *is*:
+
+1. **Removed "same cause, different scope" from the `related` definition.** The
+   clause contradicted the definition it sat under: `related`'s primary test is
+   "solving one would not resolve the other", and if the cause is the same then
+   one fix resolves both. "Scope" is also unbounded — any two descriptions of
+   one situation differ in scope at some zoom level — so the clause licensed
+   arbitrary splitting. Replaced with the causal test plus an explicit
+   statement that a difference in level of description is not a difference in
+   problem.
+2. **Replaced the "when torn, answer `related`" tie-break.** It rested on a
+   false premise: that a `same` verdict causes a silent merge. It does not —
+   the system flags an uncertain `same` for a PM. So the prompt was being asked
+   to guard something already guarded, and the bias cost information that
+   cannot be recovered downstream (a `related` verdict removes the pair from
+   review entirely). Replaced with the mechanism it actually faces: report the
+   relation you believe, carry uncertainty in `confidence`, because confidence
+   is the dial that decides how much human review the verdict gets.
+
+Corroboration, not the basis: every v1 miss returned `related` at 0.85 and
+separated the pair with the words "broader", "specifically" or "rather than" —
+the signature of a wording difference, not a problem difference.
+
+### Still short of target, and what remains
+
+**Recall 0.466 against a pre-registered ≥ 0.60.** Three planted pairs are still
+missed: `r02a/r02b`, `r05a/r05b`, `r11a/r11b`. 23 problems formed against a
+ground truth of 12, so the model still over-splits — just less. A further
+iteration would be another 54 calls, and the honest read is that this is now a
+question of how finely the extraction step normalises abstraction level, not of
+the adjudication prompt's logic.
+
+### The scripted demo request
+
+Recorded against the v2 problem set, so the Loom path runs with no API key:
+
+- **Extracted:** "The manual entry of financial data from Ledgerline into the
+  accounting system is time-consuming and error-prone." (confidence 1.0, not
+  degraded)
+- **Resolves to** `prob-req-r01b` — *"cannot automatically transfer billing data
+  from the revenue-operations platform to their accounting general ledger"* —
+  the correct problem
+- **Verdict `same` at confidence 0.99**, cosine 0.822, score 0.822 vs `T_auto`
+  0.8, so it **auto-attaches**: no human confirmation needed
+- Rationale shown in the UI: *"Both describe the exact same underlying problem
+  of lacking automated data transfer from the platform into an accounting
+  general ledger system."*
+- Across 23 candidates: 1 `same`, 1 `related`, 21 `distinct`
+
+All with **zero content words in common** with any request on that problem.
 
 ---
 

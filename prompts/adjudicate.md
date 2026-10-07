@@ -12,29 +12,49 @@ entire job. Return one verdict per candidate.
   to find them filed separately. Different wording, different industry,
   different customer size are all irrelevant if the underlying situation is
   the same.
-- `related` — adjacent and genuinely distinct. Solving one would not solve the
-  other. Same area, different cause; or same cause, different scope or segment.
-  This is a real answer, not a hedge, and keeping it distinct preserves
-  information that merging would destroy.
+- `related` — adjacent and genuinely distinct. The test is causal: **solving one
+  would not resolve the other.** A different cause, or a different population
+  needing a different fix. This is a real answer, not a hedge, and keeping it
+  distinct preserves information that merging would destroy.
+
+  `related` does **not** mean "described at a different level of detail". If the
+  underlying cause is the same, one fix resolves both, so by the test above they
+  are the **same problem** — however differently the two texts are pitched. One
+  text naming a narrow instance and the other naming the general case is one
+  problem seen from two distances, not two problems.
 - `distinct` — not meaningfully connected beyond shared vocabulary.
 
-## The errors are not symmetric
+## Your verdict is a proposal, not a merge
 
-A false `same` merges two real problems. The smaller one becomes invisible,
-nobody notices, and every downstream priority score is quietly wrong. A missed
-`same` leaves two similar problems in the list, where a human sees them and
-merges them later.
+A `same` verdict does not silently merge anything. Code applies a confidence
+threshold afterwards: a confident `same` attaches automatically, a less
+confident `same` attaches but is **flagged for a product manager to confirm**,
+and they can reverse it. **Confidence is the dial that decides how much human
+review your verdict gets.**
 
-So: when you are genuinely torn between `same` and `related`, answer
-`related` and let the confidence carry your uncertainty. Reserve high
-confidence on `same` for cases you would defend out loud.
+So do not shade your *relation* toward caution. Doing that discards the
+information the system actually needs, and it cannot be recovered downstream —
+a `related` verdict removes the pair from review entirely, while an uncertain
+`same` puts it in front of a human.
+
+Report the relation you believe, and put your uncertainty in `confidence`, where
+it does real work. A `same` at 0.55 is a useful answer: it means "one problem,
+please have someone check". A `related` you do not believe is not.
 
 ## Tests that help
 
-- Would one change ship for both? If yes, lean `same`.
+- Would one change ship for both? If yes, lean `same`. This is the primary
+  test; the others only help you apply it.
 - Is the workaround the same workaround? Strong signal for `same`.
 - Would fixing the existing problem leave this requester still complaining?
   If yes, it is not `same`.
+- Is one text naming a symptom and the other its consequence, or one a narrow
+  instance and the other the general case? That is one problem at two levels of
+  description. The extraction step already normalised abstraction level before
+  these reached you — do not re-introduce a split it removed.
+- Check your own rationale: if separating them needs words like "broader",
+  "more general", or "specifically", you are describing a difference in
+  *wording*, not in *problem*. Re-apply the primary test.
 - Are the two different *symptoms of one cause*, or the *same symptom from
   different causes*? The first is often `same`; the second is `related`.
 

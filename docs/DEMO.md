@@ -90,9 +90,16 @@ This is the centerpiece. Open intake and type:
 
 Watch the stages resolve: extract → embed → retrieve → adjudicate.
 
-It lands on **"Finance must re-enter Ledgerline figures into the system of
-record by hand"** — the problem whose seven requests include "CSV export of
-invoice lines" and "No integration with our general ledger".
+It **auto-attaches** — no human confirmation needed — to *"cannot
+automatically transfer billing data from the revenue-operations platform to
+their accounting general ledger"*, at verdict `same`, confidence **0.99**,
+cosine **0.822** against a `T_auto` of 0.8. One `same` out of 23 candidates
+compared; the adjudicator's reason appears in the UI:
+
+> "Both describe the exact same underlying problem of lacking automated data
+> transfer from the platform into an accounting general ledger system."
+
+Measured, not hoped for — see [eval-results](./eval-results.md).
 
 **It shares zero content words with any of them.** Not "few" — zero. No
 `invoice`, no `export`, no `sync`, no `integration`, no `ledger`, no `API`.
@@ -119,9 +126,13 @@ chosen auto-merge threshold justified from the curve rather than picked by
 feel. Two things to say out loud:
 
 - **Eleven planted disjoint pairs** are the recall test. Each is two requests
-  about one problem with no shared vocabulary.
+  about one problem with no shared vocabulary. **Eight of eleven are caught**,
+  including the hardest (`r06a/r06b`), whose cosine of 0.741 sits *below* the
+  best non-duplicate in the corpus — unreachable by similarity alone.
 - **Three related-but-distinct pairs** are the precision test — adjacent
-  problems that a greedy merger would collapse. "Approval controls don't exist"
+  problems that a greedy merger would collapse. **All three stay distinct**, and
+  auto-band precision is **1.000**: zero false merges anywhere a human would not
+  have been asked. "Approval controls don't exist"
   vs. "approvers can't act from email" are both about approvals and are not the
   same problem. A false merge there would hide real demand invisibly, which is
   why the thresholds are tuned for precision and the uncertain band goes to a

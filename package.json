@@ -15,7 +15,8 @@
     "record": "tsx --env-file-if-exists=.env scripts/record.ts",
     "eval": "tsx --env-file-if-exists=.env scripts/eval.ts",
     "verify:replay": "tsx --env-file-if-exists=.env scripts/verify-replay.ts",
-    "ingest": "tsx --env-file-if-exists=.env scripts/ingest.ts"
+    "ingest": "tsx --env-file-if-exists=.env scripts/ingest.ts",
+    "record:demo": "tsx --env-file-if-exists=.env scripts/record-demo.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.90",
