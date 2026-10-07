@@ -14,3 +14,54 @@ No hook for now, the CLAUDE.md rule is enough. One adjustment to the log: record
 
 RESPONSE:
 Rewrote prompts.txt in a verbatim-prompt format (=== timestamp === / PROMPT (verbatim): / RESPONSE:), restoring the first entry with the exact original prompt text and its original timestamp, and appended this entry. Left CLAUDE.md untouched as instructed.
+
+=== 2026-10-07T03:17:20Z ===
+PROMPT (verbatim):
+We'll follow spec-driven development: spec (docs/PRODUCT.md) → plan (docs/ARCHITECTURE.md + ADRs) → tasks (docs/TASKS.md) → implementation. This prompt is the spec. Do not write any code or scaffold anything yet.
+
+Act as a senior product manager paired with a staff engineer.
+
+Context: we're building an AI-first "Feature Intelligence System" that turns unstructured feature requests (from customers, prospects, support, and internal stakeholders) into actionable product decisions. Pains: duplicates, unclear underlying problems, popular ≠ strategic, inconsistent prioritization, stakeholders left uninformed, too much manual triage. The brief is in /Users/fablexis/Downloads/Technical AI Assessment .pdf if you need it.
+
+1. Map the feature-request lifecycle end to end (intake → triage → grouping → prioritization → decision → communication) and identify where time and decision quality are lost today.
+2. Propose 3 candidate high-value points where AI could fundamentally change the workflow (not just enhance the UI). For each one: who benefits, why AI is appropriate (vs. rules/heuristics), risks, and where human judgment must remain.
+3. Recommend one primary focus plus supporting capabilities.
+
+My hypothesis, which you should challenge: shift from "voting on solutions" to "accumulating evidence on problems". AI intervenes at intake to extract the underlying need, detect duplicates before they're created, and attach each request as evidence to a problem/theme. Prioritization is weighted by customer value and strategic fit, not raw vote counts, with a PM approving AI suggestions.
+
+Decisions I've already made (record them, don't re-ask; challenge them only if you see a real problem):
+- Centerpiece: duplicate detection at intake, running on the extracted underlying problem, not on the raw wording. Supporting capability: explainable prioritization weighted by customer value and strategic fit. Decision briefs are an extension, not the core.
+- Stack: Next.js (App Router) + TypeScript + SQLite with Drizzle, Tailwind + shadcn/ui.
+- AI: Google Gemini via the Vercel AI SDK behind a provider abstraction, plus a deterministic mock provider. Reason: no paid API budget, and reviewers must be able to run it for free.
+
+Write the result to docs/PRODUCT.md, including: target users and their usage scene (who uses it, when, on what device, under what time pressure), a "## Platform" section with the value "web", the problem statement, the primary capability, 2–3 success metrics with how each would be measured in the app, and an "Appetite" section: a fixed budget of ~3 hours, matching the assessment brief. Time is fixed and scope flexes. Separate the must-have core that fits the appetite from optional extensions.
+
+RESPONSE (entry 3):
+Extracted the assessment brief from the PDF (via a Swift/PDFKit script, as no poppler/pdftotext was available) to ground the spec in the actual requirements. Wrote docs/PRODUCT.md containing: problem statement; target users and usage scenes (PM, CSM/AE/support submitter, product leader) with device and time-pressure analysis; a "## Platform" section with value "web"; a six-stage lifecycle map table identifying time and decision-quality losses at each stage, with the finding that losses propagate downstream from intake; three AI intervention candidates (A: problem extraction + duplicate resolution at intake, B: explainable prioritization, C: decision memory + communication loop), each with beneficiaries, the AI-vs-rules argument, risks, and where human judgment stays; a recommendation of A primary / B supporting / C extension, argued on leverage, falsifiability, and appetite fit; a substantive challenge to the stated hypothesis (keep but re-point the vote, over-abstraction as the main technical threat, asymmetric cost of false merges vs. false splits, and weighted scoring laundering judgment into false objectivity), plus a recommendation to add two-stage retrieval (embed → LLM adjudicate); the primary capability with five required properties; three success metrics (duplicate containment + merge precision, time to triage, override rate) each with its in-app instrumentation; an Appetite section with a fixed ~3h budget broken into seven must-have items totaling 180 min, a pre-committed cut order, a never-cut list, and optional extensions; recorded decisions D1–D6 with standing; non-goals; assumptions, a risk table, and accepted tradeoffs; and five open questions for the plan phase. No code or scaffolding was created.
+
+=== 2026-10-07T03:22:51Z ===
+PROMPT (verbatim):
+Review docs/PRODUCT.md as a skeptical hiring manager evaluating this assessment. It's strong; make it sharper. Apply these specific changes, plus anything else you find weak, generic, or over-scoped:
+
+1. Mock provider vs. the centerpiece: hashed character n-gram embeddings can't match paraphrases with disjoint vocabulary, so in mock mode (the reviewer-without-a-key path) the core capability would visibly fail on exactly the planted duplicates that prove the thesis. Change the design to record/replay: record real Gemini outputs (embeddings, extractions, verdicts) for the seed corpus and the demo request into committed fixtures, have the mock replay them, and fall back to n-grams only for novel input. State this limitation honestly.
+
+2. Eval harness back into the core: you call it the most valuable extension. A minimal version belongs in the core: run the dedupe pipeline against the labeled seed set and report precision/recall, with the threshold choice justified by it. That's what makes "precision-biased" a measured claim instead of an assertion. Make room by cutting the metrics view UI (keep the logging) or thinning another item. Update the cut order and the "never cut" list accordingly.
+
+3. Length: a reviewer will skim this. Add a ~10-line executive summary at the top (problem, thesis, centerpiece, why AI, metrics, appetite), and cut repetition so the document is meaningfully shorter without losing the reasoning.
+
+4. Appetite honesty: the prompt log timestamps will show total elapsed time, including spec and planning. Keep the ~3-hour implementation budget, but state an overall cap and that the time log is the source of truth.
+
+Also: which success metrics would be hard to measure credibly? Tighten them, and update the Non-goals with anything you cut.
+
+RESPONSE (entry 4):
+Revised docs/PRODUCT.md. (1) Replaced the synthetic-mock design with record/replay as "D5 revised", conceding the original was wrong — determinism is not capability, and n-gram similarity would have failed the disjoint-vocabulary cases that are the capability's headline claim; documented the record script, hash-keyed committed fixtures, the n-gram fallback labeled in the UI as degraded, fixture-staleness detection, and the secondary benefit that fixtures make the eval reproducible. (2) Moved the eval harness into must-have core as C7 (20 min) with the seed corpus now carrying ground-truth duplicate labels (C6); funded by cutting the metrics dashboard UI (logging retained) and thinning C1/C4/C5; updated the cut order and added C6/C7 to "never cut". (3) Added a 9-bullet executive summary and cut ~650 words of repetition — net length only 3% down (4618 → 4469 words) because ~500 words of required new content were added; reported honestly rather than overclaimed. (4) Added an overall ~5h elapsed cap alongside the fixed ~3h implementation budget, naming prompts.txt timestamps as the source of truth and stating explicitly that no claim is made that the whole project fits in 3 hours. Tightened all three success metrics to separate "what this build credibly measures" from "what production would measure": M1 now dedupe precision/recall against the labeled set with pre-registered targets and a stated credibility limit (self-authored corpus and labels, threshold fitted on the evaluation data); M2 replaced wall-clock time-to-triage with human adjudication load, since median triage time on synthetic timestamps is a fabricated number; M3 downgraded to instrumentation-only, since n≈5 makes any override rate noise. Added D6 (weights in config, resolving a previously open question), five new Non-goals covering everything cut, and a fixture-staleness risk row.
+
+=== 2026-10-07T03:30:49Z ===
+PROMPT (verbatim):
+Two calls:
+1. Yes, restructure for skimmability, but keep it inside docs/PRODUCT.md: move the full Candidate B/C analysis and the risk table into an Appendix at the end, leaving a one-line summary of each in the main body. They're product reasoning, not architecture.
+2. Lower the overall cap to ~4 hours elapsed. The spec is done at ~40 minutes; plan and ADRs should take under an hour.
+Then stop. Next step is the architecture.
+
+RESPONSE (entry 5):
+Restructured docs/PRODUCT.md in place. Moved the full Candidate B and Candidate C analyses and the seven-row risk table into a new "# Appendix" at the end (Appendix A, B, C), leaving two-line summaries with links in the main body and a one-line risk summary naming the three High risks. Main body is now 4,176 words of 4,776 total. Lowered the overall elapsed cap from ~5h to ~4h in both the executive summary and the Appetite section. Flagged the resulting arithmetic honestly in the doc rather than papering over it: a ~40-minute spec plus a fixed 3-hour implementation leaves ~20 minutes for plan and ADRs, not the hour they would comfortably take, so the Appetite section now states that planning overruns are absorbed by the implementation budget via the cut order rather than by extending the cap. Verified no stale "~5 hours" references remain. Stopped as instructed; no architecture work started.
