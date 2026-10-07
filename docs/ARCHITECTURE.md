@@ -24,6 +24,8 @@ Paths above are written `lib/…` from the plan phase. The implementation puts t
 
 **Model IDs live in `.env.example`, never in code** — `GEMINI_MODEL_FAST`, `GEMINI_MODEL_STRONG`, `GEMINI_MODEL_EMBED`, `EMBED_DIM`.
 
+*Amended by [C8](./TASKS.md#c8--instrumentation--readme--5-min):* `.env.example` is not only the documentation of that rule, it is the **runtime default**. `aiConfig()` reads the ids from the environment and falls back to the committed template when the environment is silent. A fixture key includes the model id, so on the replay path the correct id is the one the fixtures were recorded with — without the fallback, a fresh clone with no `.env` missed every fixture and degraded the whole keyless demo to n-grams (measured: 0/56). The fallback is whitelisted to the model ids and `EMBED_DIM`; it can never source a credential, and `requireGeminiConfig()` still demands real env vars before anything spends quota.
+
 ---
 
 ## Data Model

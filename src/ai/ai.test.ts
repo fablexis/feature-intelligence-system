@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { openSqlite } from '../db/index';
 import { aiDecisions, schema } from '../db/schema';
 import { canonicalText } from './canonical';
-import { requireGeminiConfig } from './config';
+import { TEMPLATE_KEYS, aiConfig, requireGeminiConfig, templateDefaults } from './config';
 import { withDecisionLog } from './decisions';
 import { type FixtureEntry, loadFixtures } from './fixtures';
 import { fixtureKey, stableStringify } from './hash';
@@ -231,6 +231,40 @@ describe('secrets and model ids', () => {
     walk('./scripts');
     const offenders = files.filter((f) => /gemini-\d/.test(readFileSync(f, 'utf8')));
     expect(offenders).toEqual([]);
+  });
+
+  it('sources only non-secret model ids from the .env.example template', () => {
+    // The fallback that makes the keyless path work on a fresh clone reads a
+    // committed file that sits one line away from the API-key placeholder, so
+    // the whitelist is the whole safety argument. Pinned here rather than
+    // trusted: an added key would otherwise silently become readable.
+    expect([...TEMPLATE_KEYS]).toEqual([
+      'GEMINI_MODEL_FAST',
+      'GEMINI_MODEL_STRONG',
+      'GEMINI_MODEL_EMBED',
+      'GEMINI_MODEL_ADJUDICATE',
+      'GEMINI_MODEL_SCORE',
+      'EMBED_DIM',
+    ]);
+    const loaded = templateDefaults();
+    expect(Object.keys(loaded).every((k) => (TEMPLATE_KEYS as readonly string[]).includes(k))).toBe(true);
+    expect(JSON.stringify(loaded)).not.toMatch(/AIza[0-9A-Za-z_-]{10,}/);
+    // The real template must actually answer, or the fresh-clone path is back
+    // to where C8 found it: 0 of 56 fixtures hit.
+    expect(loaded.GEMINI_MODEL_EMBED).toBeTruthy();
+  });
+
+  it('prefers the environment over the template', () => {
+    // Recording bills real quota against whatever this resolves to, so an
+    // explicit env var must never lose to a committed default.
+    const saved = process.env.GEMINI_MODEL_EMBED;
+    process.env.GEMINI_MODEL_EMBED = 'env-wins';
+    try {
+      expect(aiConfig().modelEmbed).toBe('env-wins');
+      expect(aiConfig().modelSource).toBe('env');
+    } finally {
+      process.env.GEMINI_MODEL_EMBED = saved;
+    }
   });
 
   it('never writes a credential into a fixture', () => {

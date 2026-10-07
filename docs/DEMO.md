@@ -4,20 +4,29 @@ The five minutes a reviewer should watch. Every number below comes from the
 seeded corpus — nothing here is staged at demo time except the one request you
 type yourself.
 
-**Setup**
+**Setup** — the [README quickstart](../README.md#keyless-quickstart--no-api-key-no-network) is
+the authoritative copy; this is the same sequence.
 
 ```bash
 npm install
 npm run db:migrate
 npm run seed            # 22 accounts, 55 requests, 0 problems
-npm run verify:replay   # proves the keyless path serves real model output
+npm run verify:replay   # proves the keyless path serves real model output — 56/56
+npm run ingest          # forms the 23 problems. REQUIRED: seeding creates none
+npm run score           # factor estimates and bands, or /priority is empty
 npm run dev
 ```
 
-No API key needed. The fixture provider replays real Gemini outputs recorded
-over this corpus ([ADR 0004](./adr/0004-record-replay-provider.md)), and
-`verify:replay` fails loudly if any input would silently fall back to the
+No API key and no `.env` needed. The fixture provider replays real Gemini
+outputs recorded over this corpus ([ADR 0004](./adr/0004-record-replay-provider.md)),
+and `verify:replay` fails loudly if any input would silently fall back to the
 n-gram path instead.
+
+**`ingest` and `score` are not optional**, and the reason is the thing C6
+protects: the seed loads accounts and raw requests *only*, so the database never
+contains the groupings it is measured on. Problems exist because the pipeline
+formed them. Skip `ingest` and Beat 1 opens on an empty list; skip `score` and
+every problem on the board reads `unscored`.
 
 ---
 

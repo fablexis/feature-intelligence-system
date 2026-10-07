@@ -51,7 +51,12 @@ async function main() {
 
   console.log(`provider:          replay (AI_PROVIDER forced, no network)`);
   console.log(`fixtures recorded: ${manifest?.recordedAt ?? 'no manifest'}`);
-  console.log(`models:            fast=${manifest?.models.fast} embed=${manifest?.models.embed}`);
+  // Both lines, deliberately. A fixture key includes the model id, so these
+  // two must agree or every lookup misses — and printing only the *recorded*
+  // side is what let a fresh clone with no `.env` report the right models
+  // while degrading all 56 inputs (C8).
+  console.log(`models in use:     fast=${cfg.modelFast || '(unset)'} embed=${cfg.modelEmbed || '(unset)'}  ← from ${cfg.modelSource === 'env' ? 'env / .env' : cfg.modelSource === 'template' ? '.env.example defaults' : 'NOTHING'}`);
+  console.log(`models recorded:   fast=${manifest?.models.fast} embed=${manifest?.models.embed}`);
   console.log(`inputs checked:    ${jobs.length} (${SEED_REQUESTS.length} seed + 1 demo)`);
   console.log(`embedding dim:     ${dims} (configured ${cfg.embedDim})`);
   console.log(`deterministic:     ${deterministic ? 'yes' : 'NO'}`);

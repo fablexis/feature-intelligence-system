@@ -261,11 +261,38 @@ per batch) so adding a 13th problem does not invalidate the other twelve.
 **Goal:** the metrics are computable and the demo is runnable by someone else.
 **Depends on:** C3, C5
 
-- [ ] M1/M2/M3 each computable by one documented SQL query (no dashboard)
-- [ ] README: keyless quickstart, the with-key path, `record`/`seed`/`eval` scripts, the degraded-path limitation
-- [ ] Fresh clone → seed → `dev` reaches a working demo with no key
+- [x] M1/M2/M3 each computable by one documented SQL query (no dashboard) — all three in the [README](../README.md#success-metrics), each **run against `data/fis.db` and its real output pasted beside it**; M1's labelled precision/recall is explicitly *not* a SQL query, because the labels are deliberately absent from the database
+- [x] README: keyless quickstart, the with-key path, `record`/`seed`/`eval` scripts, the degraded-path limitation — plus the free-key URL, all 15 npm scripts marked for whether they spend quota, and the expected output of each setup step so a silent degradation is visible
+- [x] Fresh clone → seed → `dev` reaches a working demo with no key — **verified by actually doing it**, which is how the defect below was found; see Verification
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Actual:** ~40 min (est. 5) · **Status:** Done · **Deviation:**
+- **DEFECT FOUND AND FIXED — the fresh-clone keyless path was completely broken, and it is the one claim the whole demo rests on.** Cloning the repo and following the setup with no `.env` gave `real extractions: 0/56, real embeddings: 0/56`. A fixture key includes the model id (`src/ai/hash.ts`), model ids came from the environment only, and with nothing configured they resolve to `''` — so **every** lookup missed and the entire pipeline fell back to n-grams. That is not a degraded demo, it is the *opposite* of the central claim: [ADR 0004](./adr/0004-record-replay-provider.md) exists because n-grams cannot match "add CSV export" to "finance can't get the numbers into Excel", which is precisely what a reviewer would have been shown.
+- **Fix: model ids fall back to the committed `.env.example` template when env is silent.** Not a convenience — on the replay path the *correct* model id is the one the fixtures were recorded with, and [ARCHITECTURE](./ARCHITECTURE.md#components) already names `.env.example` as the one place model ids live. Env still wins when set, which is what recording needs. No literal enters `src/`, so C2's grep criterion still returns nothing.
+- **The fallback reads a file that sits one line from an API-key placeholder, so it is a whitelist, not a filter.** `TEMPLATE_KEYS` permits five model ids and `EMBED_DIM` and nothing else; two tests pin the list, assert the loaded values can never match a Google key shape, and assert env beats template. `requireGeminiConfig()` deliberately still checks `process.env` directly rather than the effective config: the template's defaults are right for *replaying*, but a run about to spend real quota should have been told in so many words which models it will bill.
+- **`verify:replay` was printing the models it was *not* using**, which is why this survived C2. It read `manifest.models` for the display line while looking fixtures up with the (empty) env values — so it reported the correct model names and then failed all 56 inputs. It now prints both the **effective** models and their source (`env` / `.env.example` / `NOTHING`) above the recorded ones. Two lines that must agree, side by side, is the check that would have caught this in ten seconds.
+- **`DEMO.md`'s setup block was missing `ingest` and `score`.** Following it exactly produced an empty problem list and an unscored board, because the seed loads accounts and raw requests only — problems exist because the pipeline formed them, which is C6's no-label-leakage guarantee. The block now has both commands and says why they are not optional, and points at the README as the authoritative copy so the two cannot drift.
+- **M1 cannot be a SQL query, and saying so is the honest version.** Ground truth lives in `src/seed/labels.ts` and never reaches the database — a test parses `scripts/seed.ts` to enforce it. So the acceptance criterion is met by documenting the metric's **production counterpart** in SQL (per-band attaches and the rate at which a human later undid one) and pointing the labelled precision/recall at `npm run eval`. Checked that the query actually measures something rather than printing constants: un-merging one flagged attach moves the flagged band to 0.909 and leaves the auto band at 1.000.
+- **M3's query returns no rows on a freshly ingested database, which is the correct answer.** Nothing is pre-baked — 0 overrides, 0 supports. Verified it populates by driving the real no-JS override form with `curl` in the clone: no reason → refused, nothing written; with a reason → one row, suggested and final both retained. The README shows the empty case *and* the populated one rather than only the flattering one.
+- **Costed ~40 min against a 5-min estimate, ~8× over, and the estimate was wrong in kind rather than in degree.** C8 was budgeted as "write the README", which is what it would have been had the third criterion not been checked. Verifying a fresh clone is what turned it into a bug hunt — and the bug was total, in the project's load-bearing claim. The estimate assumed the demo path worked because it had always worked *here*, on a machine with a `.env`.
+- **Two notes left for [E3](#e3--review--hardening) rather than mixed in:** `npm run record -- --dry-run` warns that extract and factors share a bucket even though extraction is fully recorded (C5 taught `sharedBuckets()` about active stages, but `record.ts` still calls `renderBudget()` with no argument, so it uses the strict rule) — conservative and harmless, but inaccurate. And the manifest's stale v1 adjudication prompt version, already logged by C7.
+- **Scope held.** No metrics dashboard ([PRODUCT non-goal](./PRODUCT.md#non-goals)), no new npm script for the queries — the README is the documented place, and the queries are pasted with the output they actually produced. The one UI change is flipping C8's own badge on `/`; the default `Create Next App` page title is left for [E1](#e1--ui-polish-of-the-demo-screens).
+
+**Verification** — every step re-run in a throwaway clone at `git clone` + `npm install`, with **no `.env` present**:
+
+| step | result |
+|---|---|
+| `npm run db:migrate` · `seed` | 10 tables · 22 accounts, 55 requests, 0 problems |
+| `npm run verify:replay` | **56/56** real extractions and embeddings, 0 degraded, deterministic |
+| `npm run ingest` | **23 problems**, 32 attached (11 flagged), **0 degraded**, 0 API calls |
+| `npm run score` | **23** `score_runs`, bands now 10 · next 2 · later 4 · no 7, 0 degraded |
+| `npm run eval` | precision **1.000** / recall **0.466**, floor PASS, and `docs/eval-results.md` regenerated **byte-identical** |
+| `npm run record -- --dry-run` | runs keyless and now prints real model names in the budget table |
+| `npm run build` | clean; route types unchanged |
+| `npm run dev` + all four pages | 200, problem list shows 23 problems / 11 flagged |
+| Beat 3, typed live through `/api/intake` | auto-attach to `prob-req-r01b`, cosine **0.822**, verdict `same`, **0 degraded** |
+| the three human-in-the-loop forms | override refused without a reason, recorded with one; un-merge flips `active` and leaves `body_raw` intact |
+
+The main repo's `data/fis.db` was left at its canonical demo state (23 problems, 23 score runs, 0 overrides, 0 supports) — every interaction test ran in the clone, so DEMO.md's account counts still match what a reviewer sees.
 
 ---
 
@@ -289,6 +316,8 @@ Priority order. None are in the 180-minute budget.
 - [ ] The degraded-path label is honest and unmissable
 - [ ] Priority board legible when projected
 - [ ] Empty states for a fresh database
+- [ ] ADR 0005's filtered PM review queue (the flagged population is countable today, but there is no view) — deferred out of C4
+- [ ] Page metadata still says `Create Next App` — one line, found during C8's fresh-clone pass and left here rather than widening that task
 
 **Actual:** · **Status:** Todo · **Deviation:**
 
@@ -309,6 +338,11 @@ Priority order. None are in the 180-minute budget.
 - [ ] Unknown enum / schema violation resolves to `distinct`
 - [ ] Concurrent submissions of the same problem don't double-create
 - [ ] `/security-review` and `/code-review` run clean
+- [ ] The 503 retry policy ADR 0001's second amendment declined to tune blind — a failed call is still a billed call
+- [ ] `fixtures/manifest.json` records the **v1** adjudication prompt version; `ingest` writes those fixtures and never updates the manifest *(found by C7)*
+- [ ] `npm run record -- --dry-run` warns that extract and factors share a bucket even though extraction is fully recorded: `record.ts` calls `renderBudget()` with no argument, so it uses the pre-C5 strict rule instead of the active-stage one *(found by C8)*
+- [ ] `generateObject` is deprecated in AI SDK 7; prompt versions render `v1-<hash>` where `v1` is the *scheme* version, which reads misleadingly *(both found by C2/C3)*
+- [ ] 9 npm audit findings, all dev-tooling-only, with no non-breaking fix available *(found by C1)*
 
 **Actual:** · **Status:** Todo · **Deviation:**
 

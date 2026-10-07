@@ -11,7 +11,7 @@ const TASKS = [
   { id: 'C7', name: 'Eval harness', done: true },
   { id: 'C4', name: 'Problem detail', done: true },
   { id: 'C5', name: 'Explainable priority', done: true },
-  { id: 'C8', name: 'Instrumentation + README', done: false },
+  { id: 'C8', name: 'Instrumentation + README', done: true },
 ];
 
 export default function Home() {
