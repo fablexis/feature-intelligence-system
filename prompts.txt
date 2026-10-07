@@ -1,3 +1,16 @@
-[2026-10-07T02:51:51Z]
-Prompt: Create a CLAUDE.md file in the project root containing a "Project Rules > Prompt Logging" section instructing that every new instruction/prompt be appended to prompts.txt with an ISO 8601 timestamp and a brief summary of the response.
-Response: Created /Users/fablexis/Documents/ai-test/CLAUDE.md with the requested Project Rules section, and started this prompts.txt log with the current entry.
+=== 2026-10-07T02:51:51Z ===
+PROMPT (verbatim):
+Create a CLAUDE.md file in the project root with the following instruction:
+# Project Rules
+## Prompt Logging
+Every time you receive a new instruction or prompt, append it to prompts.txt in the project root with a timestamp (ISO 8601) and a brief summary of what you did in response. Create the file if it doesn't exist. Keep this log updated throughout all sessions.
+
+RESPONSE:
+Created /Users/fablexis/Documents/ai-test/CLAUDE.md with the requested "# Project Rules / ## Prompt Logging" section, and created prompts.txt with this first log entry. Noted that a CLAUDE.md rule is a context guideline rather than an enforced mechanism, and offered a UserPromptSubmit hook as a more reliable alternative.
+
+=== 2026-10-07T03:01:46Z ===
+PROMPT (verbatim):
+No hook for now, the CLAUDE.md rule is enough. One adjustment to the log: record each prompt verbatim (the exact text I sent, not a paraphrase), followed by the summary of what you did. Rewrite the first entry that way too. Don't modify the rule text in CLAUDE.md.
+
+RESPONSE:
+Rewrote prompts.txt in a verbatim-prompt format (=== timestamp === / PROMPT (verbatim): / RESPONSE:), restoring the first entry with the exact original prompt text and its original timestamp, and appended this entry. Left CLAUDE.md untouched as instructed.
