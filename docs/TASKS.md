@@ -102,13 +102,19 @@ Three non-obvious reasons:
 **Goal:** the corpus that makes the centerpiece visible and the eval possible.
 **Depends on:** C1
 
-- [ ] ~40–60 requests across ~12 problems, with accounts carrying segment + ARR
-- [ ] **≥ 8 planted near-duplicate pairs with deliberately disjoint vocabulary**
-- [ ] Ground-truth labels map every request to its problem
-- [ ] At least two *related-but-distinct* pairs, to catch over-merging
-- [ ] `npm run seed` is idempotent
+- [x] ~40–60 requests across ~12 problems, with accounts carrying segment + ARR — 55 requests, 12 problems, 22 accounts spanning $8k–$640k ARR
+- [x] **≥ 8 planted near-duplicate pairs with deliberately disjoint vocabulary** — 11 pairs, **machine-verified** by a stemming tokenizer (`src/seed/disjoint.ts`); the test fails on a single shared content word
+- [x] Ground-truth labels map every request to its problem — `src/seed/labels.ts`, asserted bijective against the corpus
+- [x] At least two *related-but-distinct* pairs, to catch over-merging — 3 pairs, each with its rationale recorded
+- [x] `npm run seed` is idempotent — verified by running it twice: 22/55 both times
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Actual:** ~7 min (est. 10) · **Status:** Done · **Deviation:**
+- **How problems come to exist (no label leakage).** The seed loads **accounts and raw requests only**. Problems and evidence links are created solely by running the intake pipeline over the corpus (C3 adds `npm run ingest`), so the database never contains the answers it is measured on. `scripts/seed.ts` does not import `labels.ts`, and a test enforces that by parsing the script for the import and for every exported symbol. The request fixtures carry no label field at all, so there is nothing to leak by accident.
+- **Labels are opaque keys, not problem ids**, because the pipeline mints its own ids. C7 therefore scores **pairwise**: for each pair of requests, did the pipeline group them, and should it have? This is recorded here because it constrains C7's implementation.
+- **No `supports` rows are seeded.** The popular-vs-strategic contrast is carried by the *request distribution* instead — 9 distinct SMB accounts ($150k combined) on notification scoping against 3 enterprise accounts ($1.57M) on data residency. So evidence breadth emerges from the data with zero leakage, and the one-click support action stays a live demo interaction rather than pre-baked state.
+- **Schema addition: `requests.source`** (5 channels). `submitter_kind` cannot distinguish a CSM's third-person note from the customer's own words, and the two read very differently enough to matter to the extractor prompt. Documented in ARCHITECTURE.md; required column, so C1's schema test was updated.
+- **One fixture reworded by the verifier.** `r02a` used "find" and `r02b` "finding", which the stemmer collapses to one token. Semantically different words, but the strict check is the safe direction for this claim, so the fixture changed rather than the checker ("identify").
+- **Prospect ARR is 0** and therefore invisible to `customer_value`. A real system would weight pipeline deal size; flagged in DEMO.md as a known modelling gap rather than papered over with a fake ARR.
 
 ### C7 — Eval harness · 20 min
 **Goal:** turn "precision-biased" into a measured claim.

@@ -101,6 +101,7 @@ CREATE TABLE `requests` (
 	`title` text NOT NULL,
 	`body_raw` text NOT NULL,
 	`submitter_kind` text NOT NULL,
+	`source` text NOT NULL,
 	`account_id` text,
 	`resolution` text,
 	`degraded` integer DEFAULT false NOT NULL,

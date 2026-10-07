@@ -60,6 +60,7 @@ describe('schema', () => {
         title: 'Add CSV export',
         bodyRaw: 'We need a CSV export button on the billing page.',
         submitterKind: 'customer',
+        source: 'customer_direct',
         accountId: account.id,
       })
       .returning()

@@ -1,0 +1,46 @@
+{
+  "company": "Ledgerline",
+  "oneLiner": "Billing and revenue operations for mid-market and enterprise finance teams.",
+  "description": "Ledgerline issues invoices, runs collections, and reports revenue for companies whose finance teams close the books monthly. Customers are controllers, AR leads and RevOps managers.",
+  "fiscalYear": "FY27",
+  "goals": [
+    {
+      "id": "enterprise-readiness",
+      "name": "Enterprise readiness",
+      "statement": "Win and retain accounts above $250k ARR by clearing the controls, identity and procurement bars that enterprise buyers set.",
+      "signals": [
+        "security review",
+        "procurement",
+        "audit",
+        "approval controls",
+        "SSO/SCIM",
+        "data residency",
+        "segregation of duties"
+      ]
+    },
+    {
+      "id": "one-day-close",
+      "name": "Close the month in one day",
+      "statement": "Compress month-end close from days to hours by removing manual reconciliation and re-entry between Ledgerline and the systems of record.",
+      "signals": [
+        "month-end",
+        "reconciliation",
+        "manual re-entry",
+        "GL/ERP sync",
+        "period close"
+      ]
+    },
+    {
+      "id": "self-serve-integrations",
+      "name": "Self-serve integrations",
+      "statement": "Let customers connect their own ERP, CRM and ledger without a services engagement, cutting time-to-value after signature.",
+      "signals": ["connector", "API", "export", "implementation time", "no professional services"]
+    },
+    {
+      "id": "platform-trust",
+      "name": "Platform trust",
+      "statement": "Revenue numbers must be accurate, explainable and auditable. No silent drift, no unexplained change.",
+      "signals": ["accuracy", "audit trail", "change history", "FX correctness", "safe testing"]
+    }
+  ]
+}

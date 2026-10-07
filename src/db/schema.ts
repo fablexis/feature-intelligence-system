@@ -44,6 +44,15 @@ export const requests = sqliteTable(
     submitterKind: text('submitter_kind', {
       enum: ['customer', 'prospect', 'support', 'internal'],
     }).notNull(),
+    /**
+     * Intake channel. Distinct from `submitterKind`: a CSM's third-person note
+     * about a customer and that customer's own first-person words are both
+     * `customer`, but they read very differently and the extractor must cope
+     * with each. Kept so prompts can say whose voice the text is in.
+     */
+    source: text('source', {
+      enum: ['csm_note', 'ae_note', 'support_ticket', 'internal', 'customer_direct'],
+    }).notNull(),
     accountId: text('account_id').references(() => accounts.id),
     resolution: text('resolution', {
       enum: ['attached', 'related', 'created'],
