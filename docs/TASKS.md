@@ -27,13 +27,19 @@ Three non-obvious reasons:
 **Goal:** a running Next.js app with a migrated database and the UI kit in place.
 **Depends on:** —
 
-- [ ] `next dev` serves a page with no console errors
-- [ ] Drizzle schema covers all 10 tables from [ARCHITECTURE](./ARCHITECTURE.md#data-model); `migrate` runs clean on an empty file
-- [ ] Tailwind + shadcn/ui render one styled component
-- [ ] `.env.example` lists all four model/dim vars with no real key committed
-- [ ] `tsc --noEmit` passes
+- [x] `next dev` serves a page with no console errors — HTTP 200, clean dev log, `next build` prerenders it
+- [x] Drizzle schema covers all 10 tables from [ARCHITECTURE](./ARCHITECTURE.md#data-model); `migrate` runs clean on an empty file
+- [x] Tailwind + shadcn/ui render one styled component — Card/Badge/Button on `/`
+- [x] `.env.example` lists all four model/dim vars with no real key committed
+- [x] `tsc --noEmit` passes — plus `lint` clean and 4/4 Vitest tests green
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Actual:** ~10 min (est. 25) · **Status:** Done · **Deviation:**
+- **SQLite driver: `better-sqlite3`, not `node:sqlite`.** ARCHITECTURE.md named no driver. `node:sqlite` would avoid a native module, but Drizzle only supports it in `drizzle-orm@1.0.0-rc.4`; stable is `0.45.3`. An RC ORM is a worse risk in a fixed-time build than a native module with working prebuilds (verified loading on Node 24 / darwin-arm64).
+- **Added `tsx`** as the script runner. Node 24's native type stripping cannot resolve extensionless relative imports, and adding `.ts` extensions throughout fights Next's resolver.
+- **Bumped `@types/node` 20 → 24.** The scaffold pinned `^20` while the runtime is Node 24; Vitest 5 requires `^22 || >=24`. The types should match the runtime regardless.
+- **Four schema fields added beyond ARCHITECTURE.md**, now documented there: `problems.embedding_model`, `ai_decisions.request_id`/`problem_id`, `dedupe_suggestions.verdict_confidence`, and `unsure` on `human_action`. Each is a consequence of an ADR that the data-model table had not yet absorbed.
+- **9 npm audit findings left unfixed** (5 high, 4 moderate), all dev-tooling-only: `braces`/`micromatch`/`fast-glob` via `eslint-config-next`, and `esbuild` via `drizzle-kit`'s deprecated `@esbuild-kit/*` chain. No non-breaking fix exists — the `braces` advisory covers all of 3.x, and npm's only remedies are major *downgrades* (`eslint-config-next` 16→14, `drizzle-kit` 0.31→0.18). Neither is reachable from app runtime or from mock-mode CI. Revisit in [E3](#e3--review--hardening).
+- Faster than estimated because scaffolding is largely generated; the time went to dependency resolution, not to writing code.
 
 ### C2 — Provider abstraction + record/replay · 35 min
 **Goal:** all four model capabilities behind one interface, usable with or without a key.
