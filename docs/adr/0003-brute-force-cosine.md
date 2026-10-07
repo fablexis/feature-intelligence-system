@@ -46,3 +46,30 @@ obligations come with that switch:
    recorded tuples no longer cover every pair, so the sweep becomes an
    approximation over whatever was retrieved — the very thing choosing breadth
    avoided here.
+
+### Amendment, 2026-10-07 — the ceiling is now measured, not assumed
+
+Obligation 1 above is discharged: C7 reports the stage-1 recall ceiling
+separately, and because retrieval records a similarity for every candidate it
+can also price the top-*k* breadths this trigger will have to choose between,
+holding the formed problem set fixed ([eval-results](../eval-results.md)):
+
+| breadth | stage-1 ceiling |
+|---|---|
+| top-4 | 0.991 |
+| top-8 | 1.000 |
+| top-12, top-16, all | 1.000 |
+
+So at the current problem count the original *k* = 8 from
+[ADR 0002](./0002-two-stage-dedupe.md) would have cost **nothing**, and even
+*k* = 4 costs one of 116 true pairs. That is reassuring about the eventual
+switch and says nothing about where to set *k* later: the ceiling is a function
+of how crowded the neighbourhood gets, so it must be re-measured at the problem
+count that triggers the switch, not inherited from this one.
+
+It also sharpens the trade-off this ADR is really about. Retrieval breadth is
+nearly free in recall terms here, while **the adjudicator** is where recall is
+actually lost — the shipped build reaches 0.466 against a ≥ 0.60 target with the
+retrieval ceiling at 1.000. Narrowing retrieval to buy prompt headroom is
+therefore the cheap move; it is adjudication that the headroom should be spent
+on.

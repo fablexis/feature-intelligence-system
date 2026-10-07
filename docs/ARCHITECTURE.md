@@ -16,9 +16,11 @@ Scope discipline: this document covers only what the ~3h core ([C1–C8](./TASKS
 | AI providers | `lib/ai/` | `AiProvider` interface — `extractProblem`, `embed`, `adjudicate`, `estimateFactors`. Implementations: `gemini`, `replay`. See [ADR 0001](./adr/0001-llm-provider.md), [0004](./adr/0004-record-replay-provider.md). |
 | Retrieval | `lib/retrieval/` | Brute-force cosine over problem embeddings. [ADR 0003](./adr/0003-brute-force-cosine.md) |
 | Scoring | `lib/scoring/` | Deterministic weighted sum + band mapping. Weights in `config/weights.json`. |
-| Eval | `lib/eval/` | CLI harness: pipeline vs. labels → precision/recall per threshold. |
+| Eval | `lib/eval/` | CLI harness: pipeline vs. labels → precision/recall per threshold. Runs replay-only with `fetch` disabled, into a throwaway in-memory database. |
 | Data | `db/` | Drizzle schema, migrations, seed + labels. |
 | Fixtures | `fixtures/` | Committed recorded model outputs, keyed by input hash. |
+
+Paths above are written `lib/…` from the plan phase. The implementation puts these modules under `src/` — `src/pipeline/`, `src/ai/`, `src/eval/`, `src/db/`, `src/seed/` — with retrieval inside `src/pipeline/retrieval.ts` rather than a directory of its own. The responsibilities and the boundaries between them are as described; only the prefix differs.
 
 **Model IDs live in `.env.example`, never in code** — `GEMINI_MODEL_FAST`, `GEMINI_MODEL_STRONG`, `GEMINI_MODEL_EMBED`, `EMBED_DIM`.
 
@@ -65,6 +67,14 @@ Stage 6 is deliberately **not** on the intake path: it needs the evidence set th
 Two thresholds govern stage 5: `T_auto` (auto-attach) and `T_ask` (show as candidate at all). Both live in `config/thresholds.json`, not as code constants.
 
 The harness sweeps cosine similarity × verdict confidence over the labeled seed and emits precision/recall for each pair. Selection rule, fixed in advance: **the lowest `T_auto` whose auto-merge precision ≥ 0.90**, then the lowest `T_ask` keeping recall ≥ 0.60. The chosen values, the curve they came from, and the date are written to `docs/eval-results.md`. Changing a threshold without re-running the harness is a defect.
+
+#### Amendment, 2026-10-07 — what C7 found when the rule was run
+
+Three corrections to the paragraph above, each forced by a measurement rather than a preference ([eval-results](./eval-results.md)):
+
+- **Only `T_auto` is a config value.** `T_ask` is pinned at 0 **structurally**: [ADR 0002](./adr/0002-two-stage-dedupe.md)'s amendment moved problem formation onto the adjudicator's verdict, so `resolve()` attaches on any `same` verdict and has no `T_ask` parameter to read. The harness still sweeps `T_ask` — as a counterfactual, which measures that every rise in it costs recall and returns no precision. A key in `config/thresholds.json` that the code ignored would be a trap, so there isn't one; the reasoning is recorded there instead.
+- **The two axes collapse to one in practice.** `autoScore` is `min(confidence, similarity)` and the adjudicator's confidence never binds on this corpus, so the sweep is over a single scalar and `T_auto` is a cosine cut in disguise.
+- **The selection rule degenerates on a corpus with no false merge.** Its precision constraint is satisfied at every threshold, so "the lowest `T_auto` that keeps precision" returns the grid floor — never asking a human, which [ADR 0005](./adr/0005-duplicate-resolution-actor.md) rejects. The harness reports the rule's literal output *and* that both its clauses failed to bind; the adopted value is justified separately, from the measured cosine band in which duplicates and neighbours are indistinguishable. The rule is not silently rewritten, and the departure is recorded in `config/thresholds.json` and `docs/eval-results.md`.
 
 **Resolves PRODUCT open question 3:** the harness **reports** in the core build and exits non-zero only below a hard floor (precision < 0.75), so a mid-build regression is loud but a borderline run doesn't block. Full gating is deferred to [E4](./TASKS.md).
 

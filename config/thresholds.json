@@ -1,8 +1,9 @@
 {
-  "_comment": "T_auto is chosen by C7 from the precision/recall curve, never by hand. Until then this is an explicit placeholder, not a calibrated value.",
+  "_comment": "T_auto is chosen with reference to the C7 sweep, never by hand. Changing it without re-running `npm run eval` is a defect.",
   "tAuto": 0.8,
-  "tAutoBasis": "placeholder — pending C7 sweep",
+  "tAutoBasis": "C7 sweep, 2026-10-07. The pre-registered rule (lowest T_auto with auto-merge precision >= 0.90) degenerated: v2 makes zero false merges at every operating point, so the constraint separated nothing and the rule's literal answer was the grid floor — i.e. never ask a human, which ADR 0005 exists to reject. Zero false merges in 32 attaches bounds the error rate at ~9% (95%), wider than the floor's own headroom, so the data is consistent with 0.90 rather than certifying it. 0.80 is retained on the one constraint the corpus does supply: across all 821 labelled tuples, cosines between a request and a problem from a different true cluster reach 0.783, so only above that line can an unattended merge land where no known non-duplicate also sits. 0.80 is the lowest grid point above 0.783; 0.75 would auto-attach inside the contested band. Full derivation in docs/eval-results.md.",
+  "_tAskNote": "T_ask is deliberately absent. It is pinned at 0 structurally: formation follows the adjudicator's verdict rather than a similarity threshold (ADR 0002's amendment), so `resolve()` has no T_ask parameter. C7 sweeps it as a counterfactual and measures that every rise costs recall and returns no precision. A key here that code ignored would be a trap.",
   "candidateLimit": "all",
   "minSimilarity": 0,
-  "_candidateNote": "all problems, not top-k: removes the retrieval recall ceiling so C7's sweep is exact. See ADR 0003's breadth trigger for when this must change."
+  "_candidateNote": "all problems, not top-k: removes the retrieval recall ceiling so C7's sweep is exact. C7 measures the ceiling a narrower top-k would impose — see ADR 0003's breadth trigger."
 }

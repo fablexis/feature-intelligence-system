@@ -148,8 +148,11 @@ describe('demo story is carried by the data, not by labels', () => {
 });
 
 describe('no label leakage', () => {
-  it('keeps ground truth out of the seed script', () => {
-    const src = readFileSync('./scripts/seed.ts', 'utf8');
+  // Both files in the seeding path: the script, and the module that inserts.
+  // C7's harness seeds an ephemeral database through the same module, so a leak
+  // in either would contaminate the thing being measured.
+  it.each(['./scripts/seed.ts', './src/seed/corpus.ts'])('keeps ground truth out of %s', (path) => {
+    const src = readFileSync(path, 'utf8');
     // No import of the labels module, by any path spelling…
     expect(src).not.toMatch(/^\s*import[^;]*from\s*['"][^'"]*labels['"]/m);
     expect(src).not.toMatch(/require\(['"][^'"]*labels['"]\)/);
