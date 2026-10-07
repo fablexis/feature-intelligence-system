@@ -178,14 +178,45 @@ Corroboration, not the basis: every v1 miss returned `related` at 0.85 and
 separated the pair with the words "broader", "specifically" or "rather than" —
 the signature of a wording difference, not a problem difference.
 
-### Still short of target, and what remains
+### KNOWN GAP — recall 0.466 vs. the 0.60 target · *next with more time*
 
-**Recall 0.466 against a pre-registered ≥ 0.60.** Three planted pairs are still
-missed: `r02a/r02b`, `r05a/r05b`, `r11a/r11b`. 23 problems formed against a
-ground truth of 12, so the model still over-splits — just less. A further
-iteration would be another 54 calls, and the honest read is that this is now a
-question of how finely the extraction step normalises abstraction level, not of
-the adjudication prompt's logic.
+**Shipped at 0.466 against a pre-registered ≥ 0.60.** Recorded as a known gap
+rather than quietly dropped, and not iterated on further. Three planted pairs
+remain missed — `r02a/r02b`, `r05a/r05b`, `r11a/r11b` — and 23 problems formed
+against a ground truth of 12, so the pipeline still over-splits.
+
+**Why shipping at 0.466 is the right call here, not a concession.** The error
+asymmetry runs the other way for recall. A missed duplicate is a **false
+split**: two similar problems sit in the list, a human sees them, and a later
+merge fixes it. A false merge is invisible and silently corrupts every
+downstream score. This build protects the expensive side and does so
+completely — **auto-band precision 1.000, zero false merges in the whole
+corpus**. Trading that for recall would be trading the error we cannot detect
+for the one we can.
+
+**Diagnosis: abstraction level, in extraction rather than adjudication.** The
+v2 adjudication prompt is no longer the binding constraint — it now applies the
+causal test correctly on 8 of 11 planted pairs. The remaining misses are pairs
+whose *extracted statements* already sit at different zoom levels before
+adjudication sees them, so the adjudicator is being asked to reunify something
+the earlier stage pulled apart. `prompts/extract.md` pins abstraction level by
+anchoring on `currentWorkaround`, and that anchor is evidently not tight enough
+for these three.
+
+**Next lever, and its real cost.** Tighten the extraction prompt's
+abstraction-level rule — most promisingly by constraining `currentWorkaround`
+to a concrete physical action, which is what stops the statement drifting up or
+down the zoom axis. That changes the extraction prompt's content hash, which
+invalidates **all 56 extractions, all 56 embeddings** (they key on the
+extracted text) **and all 109 adjudications** — roughly 165 fixtures, against
+a daily cap that is still unmeasured on two of the three models. Not worth
+spending inside this appetite; it is the first thing to do with a fourth hour
+and a known quota.
+
+**Measurable consequence to carry forward:** the gap understates the reach of
+the most widely-felt problem, because notification scoping fragments across
+four problems instead of one. See [DEMO.md](./DEMO.md) Beat 2, which states the
+formed numbers rather than the intended ones.
 
 ### The scripted demo request
 
