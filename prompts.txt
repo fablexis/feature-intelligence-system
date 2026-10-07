@@ -65,3 +65,24 @@ Then stop. Next step is the architecture.
 
 RESPONSE (entry 5):
 Restructured docs/PRODUCT.md in place. Moved the full Candidate B and Candidate C analyses and the seven-row risk table into a new "# Appendix" at the end (Appendix A, B, C), leaving two-line summaries with links in the main body and a one-line risk summary naming the three High risks. Main body is now 4,176 words of 4,776 total. Lowered the overall elapsed cap from ~5h to ~4h in both the executive summary and the Appetite section. Flagged the resulting arithmetic honestly in the doc rather than papering over it: a ~40-minute spec plus a fixed 3-hour implementation leaves ~20 minutes for plan and ADRs, not the hour they would comfortably take, so the Appetite section now states that planning overruns are absorbed by the implementation budget via the cut order rather than by extending the cap. Verified no stale "~5 hours" references remain. Stopped as instructed; no architecture work started.
+
+=== 2026-10-07T03:35:00Z ===
+PROMPT (verbatim):
+Plan and tasks stage. Keep it lean: ~20 minutes, per the Appetite in docs/PRODUCT.md. No code yet.
+
+1. docs/ARCHITECTURE.md (concise, ~2 pages): components; data model (requests, problems, evidence links, accounts with ARR/segment, supports, AI decision log, human overrides, score runs); each pipeline stage with its input, output schema, model tier (fast vs. strong), latency budget, and failure fallback; how thresholds get chosen from the eval; safety (request text as untrusted data); human-in-the-loop points; and one Mermaid diagram of the intake flow.
+
+2. Short ADRs in docs/adr/ (context / decision / alternatives / consequences, ~150-250 words each):
+- 0001 LLM provider: Gemini via the Vercel AI SDK behind a provider abstraction. Be candid that the no-budget constraint drove it; compare against Claude (no free API, no first-party embeddings), OpenAI (paid), Ollama (hardware-dependent, harder for reviewers), and free aggregators (volatile). Check Google's current docs for model IDs and free-tier limits; model IDs go in .env.example, not in code.
+- 0002 Two-stage dedupe (embedding recall -> LLM adjudication)
+- 0003 Brute-force cosine in SQLite, with the scaling path
+- 0004 Record/replay provider for the keyless path
+- 0005 Who resolves a duplicate suggestion: submitter vs. PM (your open question)
+Resolve the remaining open questions from PRODUCT.md inside these, or mark them as deferred.
+
+3. docs/TASKS.md: use the IDs from PRODUCT.md (C1-C8 for the core, E1... for extensions). For each one: goal, testable acceptance criteria (checkboxes), dependencies, estimate, and empty fields for Actual time / Status (Todo · In progress · Done · Cut) / Deviation from plan. Propose the execution order (e.g. the seed corpus before recording fixtures). Extensions in priority order: E1 UI polish of the demo screens using the impeccable skill, E2 decision brief + stakeholder update, E3 review & hardening, E4 CI with mock-mode tests and evals.
+
+Stop after writing these.
+
+RESPONSE (entry 6):
+Wrote docs/ARCHITECTURE.md (components table, 10-table data model, 6-stage pipeline table with input/output schema/tier/latency budget/fallback per stage, threshold selection rule from the eval curve, untrusted-input safety section, six H1-H6 human-in-the-loop points, and a Mermaid intake-flow diagram). Checked Google's live docs for ADR 0001: current IDs are gemini-3.8-flash (stable fast), gemini-3.1-pro-preview (strong, preview-only), gemini-embedding-001 (stable); the free tier still exists but Google no longer publishes its limits on the rate-limits page, so the ADR records that as a genuine unknown rather than inventing numbers, and defaults the strong tier to stable Flash to avoid a preview model deprecating mid-assessment. Wrote the five ADRs with context/decision/alternatives/consequences. Wrote docs/TASKS.md with C1-C8 and E1-E4, each carrying goal, testable checkbox criteria, dependencies, estimate and empty Actual/Status/Deviation fields, plus the proposed order C1 -> C6 -> C2 -> C3 -> C7 -> C4 -> C5 -> C8 and the three non-obvious ordering reasons. Resolved all three remaining PRODUCT open questions: #1 in ADR 0005 (confidence-banded split with a submitter escape hatch that makes false merges self-reporting), #2 raw distinct-account evidence strength with ARR entering only via customer_value to avoid double-counting, #3 partially - report-only with a hard floor in C7, full gating deferred to E4. Also added a finding from ADR 0002 that the eval must report stage-1 recall separately, since top-k retrieval caps recall and would otherwise be misread as an adjudication failure. Elapsed at completion: 54 min total (spec ~40, plan+tasks ~14). No code written.
