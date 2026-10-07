@@ -20,7 +20,7 @@ Scope discipline: this document covers only what the ~3h core ([C1–C8](./TASKS
 | Data | `db/` | Drizzle schema, migrations, seed + labels. |
 | Fixtures | `fixtures/` | Committed recorded model outputs, keyed by input hash. |
 
-Paths above are written `lib/…` from the plan phase. The implementation puts these modules under `src/` — `src/pipeline/`, `src/ai/`, `src/eval/`, `src/db/`, `src/seed/` — with retrieval inside `src/pipeline/retrieval.ts` rather than a directory of its own. The responsibilities and the boundaries between them are as described; only the prefix differs.
+Paths above are written `lib/…` from the plan phase. The implementation puts these modules under `src/` — `src/pipeline/`, `src/ai/`, `src/scoring/`, `src/eval/`, `src/db/`, `src/seed/`, plus `src/problems/` for the problem-detail reads and writes — with retrieval inside `src/pipeline/retrieval.ts` rather than a directory of its own. The responsibilities and the boundaries between them are as described; only the prefix differs.
 
 **Model IDs live in `.env.example`, never in code** — `GEMINI_MODEL_FAST`, `GEMINI_MODEL_STRONG`, `GEMINI_MODEL_EMBED`, `EMBED_DIM`.
 

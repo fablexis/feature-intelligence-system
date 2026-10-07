@@ -55,3 +55,39 @@ Still open: adjudication (strong tier) has not been recorded yet and will face
 the same cap. At ~12 problems it needs roughly one call per ingested request,
 so the strong tier will likely need the same move to a lite model, or recording
 across more than one day.
+
+## Second amendment, 2026-10-07 — a failed call is still a billed call
+
+Recording C5's factor estimates stopped on the same 20/day cap, but for a
+reason the first amendment did not anticipate. `gemini-3.8-flash` was
+intermittently returning **503 "experiencing high demand"**, and of roughly 18
+requests billed that day, **exactly one produced output.** One batch of four
+problems was recorded; the other five batches never ran.
+
+The first amendment's lesson was that *nested* retry layers multiply one
+logical call into many. This is a different and sharper one:
+
+> **A 503 consumes a `generate_content` request.** Retrying an overloaded model
+> does not cost nothing while waiting for capacity — it spends the same daily
+> budget as a successful call, and spends it on no output at all.
+
+`src/ai/errors.ts` classifies on retry-after duration, which is the right
+instrument for telling a quota 429 from a transient one. But a 503 carries no
+retry-after, so it is classified transient and gets the full four-attempt
+backoff. On a metered free tier that is the worst case: four billed attempts,
+no result, and the backoff makes the window in which the model recovers
+*less* likely to fall inside the run.
+
+**Not changed yet, deliberately.** The obvious fix — fewer retries on 503, or
+treating "overloaded" as a stop rather than a backoff — is a policy change that
+cannot be tested without a live overloaded model, and tuning it blind risks
+replacing a known failure with an unknown one. What the data supports today is
+the measurement above, not a specific new number. Recorded here so the next
+person to hit it starts from the finding rather than rediscovering it; the
+change itself belongs to [E3](../TASKS.md#e3--review--hardening).
+
+**Operational consequence meanwhile:** when a stage stalls on an overloaded
+model, the cheap move is to stop and resume after the daily reset rather than
+to retry into the cap. Fixtures checkpoint per call, so a resumed run spends
+quota only on what is still missing — `npm run score -- --dry-run` reports
+exactly that number before anything is spent.

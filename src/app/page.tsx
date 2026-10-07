@@ -10,7 +10,7 @@ const TASKS = [
   { id: 'C3', name: 'Intake pipeline + three-way resolution', done: true },
   { id: 'C7', name: 'Eval harness', done: true },
   { id: 'C4', name: 'Problem detail', done: true },
-  { id: 'C5', name: 'Explainable priority', done: false },
+  { id: 'C5', name: 'Explainable priority', done: true },
   { id: 'C8', name: 'Instrumentation + README', done: false },
 ];
 
@@ -45,6 +45,12 @@ export default function Home() {
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium"
         >
           Browse problems
+        </Link>
+        <Link
+          href="/priority"
+          className="hover:bg-muted inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium"
+        >
+          Priority board
         </Link>
         <Link
           href="/intake"

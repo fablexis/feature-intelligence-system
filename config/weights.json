@@ -1,0 +1,21 @@
+{
+  "version": "w1-2026-10-07",
+  "_comment": "The weights ARE the strategy, and they are not AI output (PRODUCT D6/H5). They live here rather than in the UI so they stay a visible, version-controlled artifact that a PM owns and a reviewer can diff. Changing a number here re-bands every problem immediately and with no model call — the factors are stored, the arithmetic is deterministic.",
+  "weights": {
+    "customerValue": 0.35,
+    "strategicFit": 0.35,
+    "evidenceStrength": 0.2,
+    "effort": 0.1
+  },
+  "bands": {
+    "now": 0.7,
+    "next": 0.55,
+    "later": 0.35
+  },
+  "_rationale": {
+    "customerValue+strategicFit": "0.70 of the total, because PRODUCT D2 says prioritisation is weighted by customer value and strategic fit. Together they have to be able to outvote breadth, or the system reproduces the vote-counting it exists to replace.",
+    "evidenceStrength": "0.20 deliberately, not more. Breadth of corroboration is the input that was ALREADY dominant in the spreadsheet this replaces — 'vote count is the only quantified field, so it dominates by default' (PRODUCT, prioritisation pain). Giving it minority weight is the whole point; a widely-felt problem that touches no goal should be visibly ranked below a narrow one that does.",
+    "effort": "0.10, the smallest weight, because it is the factor the model is worst at. The prompt tells it to expect to be wrong here. A low weight means a bad effort guess cannot swing a band on its own. Note the direction: 1 means cheap, so a higher score raises priority.",
+    "bands": "Cut points, not a curve: 'now' at 0.70 needs two strong dominant factors, not one. Bands rather than ranks because 7.4 vs 7.1 is noise dressed as rigor (PRODUCT challenge #4), and a PM shown a decimal rubber-stamps it."
+  }
+}

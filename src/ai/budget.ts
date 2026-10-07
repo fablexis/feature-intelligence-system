@@ -27,15 +27,24 @@ export type BudgetRow = {
 };
 
 export const SEED_REQUEST_COUNT = 55;
+/**
+ * Ground-truth problem count in the labelled corpus — the planning figure.
+ *
+ * The *pipeline* forms more than this (23 at v2, because it over-splits; see
+ * eval-results), and factor scoring is billed per formed problem, not per true
+ * problem. So `budgetRows` takes the real count as an argument and `npm run
+ * score --dry-run` passes what the database actually holds. Leaving 12 as the
+ * default would have under-reported the scoring stage by half.
+ */
 export const PROBLEM_COUNT = 12;
 /** Requests whose retrieval returns nothing above the recall floor. */
 export const NO_CANDIDATE_SKIPS = PROBLEM_COUNT;
 export const FACTOR_BATCH_SIZE = 4;
 
-export function budgetRows(): BudgetRow[] {
+export function budgetRows(problemCount = PROBLEM_COUNT): BudgetRow[] {
   const cfg = aiConfig();
   const adjudicateCalls = SEED_REQUEST_COUNT + 1 - NO_CANDIDATE_SKIPS; // +1 demo request
-  const factorCalls = Math.ceil(PROBLEM_COUNT / FACTOR_BATCH_SIZE);
+  const factorCalls = Math.ceil(problemCount / FACTOR_BATCH_SIZE);
 
   return [
     {
@@ -68,13 +77,15 @@ export function budgetRows(): BudgetRow[] {
       calls: `${factorCalls}`,
       cap: '20/day',
       basis: 'measured',
-      note: `${PROBLEM_COUNT} problems batched ${FACTOR_BATCH_SIZE}/call — fits the known cap`,
+      note:
+        `${problemCount} problems batched ${FACTOR_BATCH_SIZE}/call — fits the known cap` +
+        (problemCount === PROBLEM_COUNT ? '' : ` (${PROBLEM_COUNT} planned; the pipeline over-splits)`),
     },
   ];
 }
 
-export function renderBudget(): string {
-  const rows = budgetRows();
+export function renderBudget(problemCount = PROBLEM_COUNT): string {
+  const rows = budgetRows(problemCount);
   const w = { stage: 11, model: 24, calls: 11, cap: 16 };
   const pad = (s: string, n: number) => s.padEnd(n);
   const line = '─'.repeat(w.stage + w.model + w.calls + w.cap + 4);

@@ -45,6 +45,18 @@ export const FactorsSchema = z.object({
 export type Factors = z.infer<typeof FactorsSchema>;
 
 /**
+ * One batched factor call covers several problems, each answer keyed by problem
+ * id so the results cannot be silently reordered or misattributed.
+ *
+ * Fixtures stay keyed **per problem**, so batching is an implementation detail
+ * of recording and is invisible to replay — adding a 13th problem does not
+ * invalidate the other twelve.
+ */
+export const FactorsBatchSchema = z.object({
+  estimates: z.array(z.object({ problemId: z.string().min(1), factors: FactorsSchema })),
+});
+
+/**
  * The safe default for adjudication. Per ADR 0002 and the error asymmetry in
  * PRODUCT challenge #3, anything unexpected — schema violation, unknown enum,
  * missing candidate, provider failure — resolves to `distinct`, which is the

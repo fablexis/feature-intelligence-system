@@ -89,10 +89,24 @@ Data residency is three voices. One is Legal blocking a contract expansion,
 one is procurement gating a renewal, one is a CISO in a security review.
 
 **The ranking should put data residency above notification scoping, and show
-you why.** Expand the factor decomposition: `customer_value` cites the three
-enterprise accounts, `strategic_fit` cites the enterprise-readiness goal,
-`evidence_strength` is honestly *lower*. The score doesn't hide the tension —
+you why.** The priority board shows the factor decomposition: `customer_value`
+citing the enterprise accounts, `strategic_fit` citing the enterprise-readiness
+goal, `evidence_strength` honestly *lower*. The score doesn't hide the tension —
 it shows a PM the trade and makes them own it.
+
+> **Not yet true on this build — say so.** Factor recording stopped on the
+> `gemini-3.8-flash` daily cap with **4 of 23 problems scored**, and neither of
+> these two is among them ([TASKS C5](./TASKS.md#c5--explainable-priority--25-min)).
+> Both show as `unscored` on the board, which withholds a band rather than
+> guessing one. What a reviewer *can* see today is the mechanism on the four
+> scored problems — accounts and ARR beside every band, factors with their
+> citations, the weights file, and the override-with-reason flow — plus the
+> weights that decide the trade: customer value and strategic fit carry 0.70
+> between them against evidence strength's 0.20, and a unit test asserts a
+> narrow-but-strategic profile outranks a broad-but-unaligned one. The ordering
+> claim itself is **unmeasured on this corpus** until `npm run score` finishes
+> the remaining five batches after the daily reset. Don't assert it from the
+> stage; show the weights and the test, or run the five calls first.
 
 ---
 

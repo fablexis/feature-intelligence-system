@@ -14,6 +14,7 @@
     "seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "record": "tsx --env-file-if-exists=.env scripts/record.ts",
     "eval": "tsx --env-file-if-exists=.env scripts/eval.ts",
+    "score": "tsx --env-file-if-exists=.env scripts/score.ts",
     "verify:replay": "tsx --env-file-if-exists=.env scripts/verify-replay.ts",
     "ingest": "tsx --env-file-if-exists=.env scripts/ingest.ts",
     "record:demo": "tsx --env-file-if-exists=.env scripts/record-demo.ts"

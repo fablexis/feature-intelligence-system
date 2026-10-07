@@ -5,6 +5,8 @@ import { fixtureKey, stableStringify } from './hash';
 import { EMBED_PROMPT_VERSION, prompt } from './prompts';
 import {
   AdjudicationSchema,
+  type Factors,
+  FactorsBatchSchema,
   FactorsSchema,
   ProblemDraftSchema,
   type Verdict,
@@ -41,6 +43,9 @@ const timed = async <T>(fn: () => Promise<T>): Promise<[T, number]> => {
 
 export function createGeminiProvider(): AiProvider & {
   embedBatch(texts: string[]): Promise<Array<AiResult<EmbedOutput>>>;
+  estimateFactorsBatch(
+    inputs: Array<{ problemId: string; input: FactorsInput }>,
+  ): Promise<Array<AiResult<Factors> & { problemId: string }>>;
 } {
   const cfg = requireGeminiConfig();
   // The SDK reads GOOGLE_GENERATIVE_AI_API_KEY itself; we never touch the value.
@@ -148,7 +153,66 @@ export function createGeminiProvider(): AiProvider & {
     },
 
     embedBatch,
+    estimateFactorsBatch,
   };
+
+  /**
+   * Factor estimates for several problems in one call — 4 per call, which cuts
+   * the stage from 23 calls to 6 against a **measured 20/day cap** on this
+   * model (ADR 0001 amendment). Quota is the scarce resource in this build.
+   *
+   * Batching is safe *here* and deliberately not safe for extraction. The eval
+   * measures dedupe, and a model shown several requests at once could normalise
+   * their statements toward each other, manufacturing the very similarity the
+   * dedupe eval exists to measure. Nothing measures the scores, so cross-talk
+   * between four problems in one prompt costs ranking nuance at worst — and for
+   * a *ranking* task, seeing peers is arguably the right context.
+   *
+   * Two properties make it reproducible: batch composition is fixed by the
+   * caller sorting on problem id, and each answer is keyed back to its problem
+   * by id rather than by position, so a reordered response cannot silently
+   * attribute one problem's factors to another. Any problem the model omits is
+   * reported as missing rather than defaulted.
+   */
+  async function estimateFactorsBatch(
+    inputs: Array<{ problemId: string; input: FactorsInput }>,
+  ): Promise<Array<AiResult<Factors> & { problemId: string }>> {
+    const p = prompt.factors();
+    const [res, latencyMs] = await timed(() =>
+      generateObject({
+        model: google(cfg.modelScore),
+        ...NO_SDK_RETRY,
+        schema: FactorsBatchSchema,
+        system: `${p.text}\n\n## This call covers several problems\n\nYou are given a list of problems. Return one estimate per problem, each tagged with the \`problemId\` it belongs to. Judge each problem on its own evidence; the others are context for relative ranking, not a reason to average.`,
+        prompt: [
+          untrusted(
+            'problems',
+            stableStringify(inputs.map((i) => ({ problemId: i.problemId, ...i.input }))),
+          ),
+        ].join('\n\n'),
+      }),
+    );
+
+    const byId = new Map(res.object.estimates.map((e) => [e.problemId, e.factors]));
+    const perProblem = Math.round(latencyMs / Math.max(inputs.length, 1));
+    const tokens = res.usage?.totalTokens
+      ? Math.round(res.usage.totalTokens / Math.max(inputs.length, 1))
+      : undefined;
+
+    return inputs.flatMap(({ problemId, input }) => {
+      const factors = byId.get(problemId);
+      if (!factors) return [];
+      return [
+        {
+          problemId,
+          value: factors,
+          // Keyed on the SINGLE-problem input, which is what replay will look
+          // up. The batch never appears in a fixture key.
+          meta: meta('score', cfg.modelScore, p.version, input, perProblem, tokens),
+        },
+      ];
+    });
+  }
 }
 
 export const geminiEnabled = () => aiConfig().provider === 'gemini';

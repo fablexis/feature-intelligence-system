@@ -19011,6 +19011,48 @@
   "tokens": 3893
  },
  {
+  "key": "4e1685240a9f25f2a382b9e059499946bc7c94221310ce298711e409ec712948",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.75,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02e"
+    ],
+    "reason": "Touches significant enterprise ARR ($800k+) where lack of visibility causes internal operational disputes and lost time during QBRs."
+   },
+   "strategicFit": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02e"
+    ],
+    "reason": "Directly aligns with 'Platform trust' (audit trail, change history) and 'Enterprise readiness' controls."
+   },
+   "evidenceStrength": {
+    "score": 0.65,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02c",
+     "ev-req-r02e"
+    ],
+    "reason": "Three independent accounts across mid-market and enterprise cite concrete operational pain from missing change tracking."
+   },
+   "effort": {
+    "score": 0.55,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02c"
+    ],
+    "reason": "Exposing user change logs and timestamps on invoice entities is moderately scoped compared to an immutable system-wide ledger."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 1057
+ },
+ {
   "key": "4f638c63e22754ef6b815b6a3dee09272289c540b9cc33afddb86a8b50413f3c",
   "stage": "extract",
   "output": {
@@ -25764,6 +25806,46 @@
    }
   ],
   "tokens": 3956
+ },
+ {
+  "key": "61b814f6a6f7eb58f98c7b41611138ca39cc16a968b323fa456b8a833bfcef32",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.45,
+    "citations": [
+     "ev-req-r01a",
+     "ev-req-r01f"
+    ],
+    "reason": "Includes a high-value enterprise customer ($640k ARR) and an SMB, but requests describe workflow friction rather than explicit churn risks or blocked deals."
+   },
+   "strategicFit": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r01a",
+     "ev-req-r01f"
+    ],
+    "reason": "A CSV export marginally touches the self-serve export goal, but falls short of enterprise-grade automated sync and close compression."
+   },
+   "evidenceStrength": {
+    "score": 0.35,
+    "citations": [
+     "ev-req-r01a",
+     "ev-req-r01f"
+    ],
+    "reason": "Supported by only two distinct customer accounts with brief feedback."
+   },
+   "effort": {
+    "score": 0.85,
+    "citations": [
+     "ev-req-r01a"
+    ],
+    "reason": "Adding a CSV export of invoice lines is typically a straightforward, low-effort reporting feature."
+   },
+   "confidence": 0.75,
+   "tension": "While cheap and desired by an enterprise account, a static CSV export offers low strategic alignment compared to automated integrations."
+  },
+  "tokens": 1057
  },
  {
   "key": "61d6648aa6828bdf1697aaaa8d19ea161e31d373ab20ee1716f50c7a0f4e8966",
@@ -37859,6 +37941,53 @@
   "tokens": 4266
  },
  {
+  "key": "99b7c759a505050fb44cde0a9fb6d3a7a0f949879dda2faea65efa871ac8dc5e",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01e",
+     "ev-req-r01g"
+    ],
+    "reason": "Impacts nearly $1M in enterprise ARR and directly blocks a deal with an enterprise prospect (Meridian Freight)."
+   },
+   "strategicFit": {
+    "score": 0.95,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01d",
+     "ev-req-r01e"
+    ],
+    "reason": "Directly targets 'Close the month in one day' and 'Self-serve integrations' by eliminating manual double entry and syncing to ERP/GL systems."
+   },
+   "evidenceStrength": {
+    "score": 0.85,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01c",
+     "ev-req-r01d",
+     "ev-req-r01e",
+     "ev-req-r01g"
+    ],
+    "reason": "Broad, multi-account evidence across multiple enterprise accounts, a mid-market account, and sales pipeline feedback."
+   },
+   "effort": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01d",
+     "ev-req-r01e"
+    ],
+    "reason": "Building two-way ERP and general ledger integrations like NetSuite is notoriously complex and resource-intensive."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 1057
+ },
+ {
   "key": "9c97ba08f5a193e2d21bc676d2592eb532360a93d5907d062c8c85ef354a68e5",
   "stage": "adjudicate",
   "output": [
@@ -40498,6 +40627,46 @@
    0.002349
   ],
   "tokens": null
+ },
+ {
+  "key": "ac06fd3fa4dee04c32da0b5994128a1e6f622f7354e416da64e19f63c7176033",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r02b",
+     "ev-req-r02d"
+    ],
+    "reason": "Directly caused an audit finding for an enterprise customer ($335k ARR) and blocks internal SOC 2 compliance."
+   },
+   "strategicFit": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r02b",
+     "ev-req-r02d"
+    ],
+    "reason": "Strictly addresses 'Enterprise readiness' (audit, security review) and 'Platform trust' (auditable, explainable changes)."
+   },
+   "evidenceStrength": {
+    "score": 0.5,
+    "citations": [
+     "ev-req-r02b",
+     "ev-req-r02d"
+    ],
+    "reason": "Cites only one external enterprise customer and one internal SOC 2 compliance note."
+   },
+   "effort": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r02d"
+    ],
+    "reason": "Implementing a comprehensive, immutable audit trail for all document mutations is an architectural, heavy backend undertaking."
+   },
+   "confidence": 0.65,
+   "tension": ""
+  },
+  "tokens": 1057
  },
  {
   "key": "ac16554036570259ead557357cf9c5dc27d6d7a7535bc57f1a33a0ccb707f0a0",
