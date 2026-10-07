@@ -74,17 +74,41 @@ export function budgetRows(problemCount = PROBLEM_COUNT): BudgetRow[] {
     {
       stage: 'factors',
       model: cfg.modelScore,
+      ...scoreCap(),
       calls: `${factorCalls}`,
-      cap: '20/day',
-      basis: 'measured',
       note:
-        `${problemCount} problems batched ${FACTOR_BATCH_SIZE}/call — fits the known cap` +
+        `${problemCount} problems batched ${FACTOR_BATCH_SIZE}/call` +
         (problemCount === PROBLEM_COUNT ? '' : ` (${PROBLEM_COUNT} planned; the pipeline over-splits)`),
     },
   ];
 }
 
-export function renderBudget(problemCount = PROBLEM_COUNT): string {
+/**
+ * The scoring stage's cap follows **the model it is pointed at**, not the
+ * stage — which is the whole reason this is computed rather than written down.
+ * The 20/day figure was measured on the strong tier; after 503s burned that
+ * bucket, scoring moved to the fast tier, whose capacity is a different and
+ * better-evidenced number. A row that kept claiming "20/day measured" would be
+ * reporting a fact about a model no longer in use.
+ *
+ * Compared by tier rather than by model id, because no model id may appear in
+ * `src/` — identity comes from the environment (ADR 0001).
+ */
+function scoreCap(): { cap: string; basis: CapBasis } {
+  const cfg = aiConfig();
+  if (cfg.modelScore && cfg.modelScore === cfg.modelFast) {
+    return { cap: '≥57/day', basis: 'lower-bound' };
+  }
+  if (cfg.modelScore && cfg.modelScore === cfg.modelStrong) {
+    return { cap: '20/day', basis: 'measured' };
+  }
+  return { cap: 'unknown', basis: 'unknown' };
+}
+
+export function renderBudget(
+  problemCount = PROBLEM_COUNT,
+  active: readonly MeteredStage[] = METERED_STAGES,
+): string {
   const rows = budgetRows(problemCount);
   const w = { stage: 11, model: 24, calls: 11, cap: 16 };
   const pad = (s: string, n: number) => s.padEnd(n);
@@ -107,11 +131,11 @@ export function renderBudget(problemCount = PROBLEM_COUNT): string {
 
   // Verify the isolation claim rather than asserting it. Only generate_content
   // stages share a bucket; embeddings are metered separately.
-  const collisions = sharedBuckets();
+  const collisions = sharedBuckets(active);
   if (collisions.length === 0) {
     out.push(
-      'Each generate_content stage has its own model, so one exhausted bucket',
-      'stalls at most one stage.',
+      'Each stage that still needs quota has its own model, so one exhausted',
+      'bucket stalls at most one stage.',
     );
   } else {
     for (const c of collisions) {
@@ -121,20 +145,48 @@ export function renderBudget(problemCount = PROBLEM_COUNT): string {
       );
     }
   }
+  // Sharing with a finished stage is safe, and saying so is the point: it is
+  // the escape hatch when a model's cap is gone for the day.
+  for (const o of benignOverlaps(active)) {
+    out.push(
+      `note: ${o.stage} shares ${o.model || '(unset)'} with ${o.with.join(' and ')}, which is`,
+      `  already fully recorded — a finished stage makes no calls, so the shared`,
+      `  bucket cannot stall either one.`,
+    );
+  }
   out.push('Progress is checkpointed per call, so a stall resumes for free.', '');
   return out.join('\n');
 }
 
-/** generate_content stages that would compete for the same daily cap. */
-export function sharedBuckets(): Array<{ model: string; stages: string[]; fix: string }> {
+/** The `generate_content` stages that can consume a daily cap. */
+export const METERED_STAGES = ['extract', 'adjudicate', 'factors'] as const;
+export type MeteredStage = (typeof METERED_STAGES)[number];
+
+/**
+ * generate_content stages that would compete for the same daily cap.
+ *
+ * **Only stages that still need quota can collide.** A shared bucket is a risk
+ * because exhausting it stalls two stages at once — but a stage whose fixtures
+ * are already fully recorded will not ask for another call, so it cannot be
+ * stalled and cannot stall anything else. Treating a finished stage as a
+ * collision would have blocked the only move available when the strong tier's
+ * cap was burned by 503s: moving scoring onto the already-complete extract
+ * bucket (third ADR 0001 amendment).
+ *
+ * @param active stages that still have calls to make; default all of them
+ */
+export function sharedBuckets(
+  active: readonly MeteredStage[] = METERED_STAGES,
+): Array<{ model: string; stages: string[]; fix: string }> {
   const cfg = aiConfig();
-  const metered: Array<[string, string, string]> = [
+  const metered: Array<[MeteredStage, string, string]> = [
     ['extract', cfg.modelFast, 'GEMINI_MODEL_FAST'],
     ['adjudicate', cfg.modelAdjudicate, 'GEMINI_MODEL_ADJUDICATE'],
     ['factors', cfg.modelScore, 'GEMINI_MODEL_SCORE'],
   ];
   const byModel = new Map<string, Array<[string, string]>>();
   for (const [stage, model, envVar] of metered) {
+    if (!active.includes(stage)) continue;
     byModel.set(model, [...(byModel.get(model) ?? []), [stage, envVar]]);
   }
   return [...byModel.entries()]
@@ -147,4 +199,24 @@ export function sharedBuckets(): Array<{ model: string; stages: string[]; fix: s
         .map(([, v]) => v)
         .join(' or '),
     }));
+}
+
+/** Stages sharing a model with a stage that is already finished. */
+export function benignOverlaps(
+  active: readonly MeteredStage[],
+): Array<{ model: string; stage: MeteredStage; with: MeteredStage[] }> {
+  const cfg = aiConfig();
+  const modelOf: Record<MeteredStage, string> = {
+    extract: cfg.modelFast,
+    adjudicate: cfg.modelAdjudicate,
+    factors: cfg.modelScore,
+  };
+  const finished = METERED_STAGES.filter((s) => !active.includes(s));
+  return active
+    .map((stage) => ({
+      model: modelOf[stage],
+      stage,
+      with: finished.filter((f) => modelOf[f] === modelOf[stage]),
+    }))
+    .filter((row) => row.with.length > 0);
 }

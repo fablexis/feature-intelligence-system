@@ -12,6 +12,48 @@
   "tokens": 846
  },
  {
+  "key": "01ec64d854712ecaa20bb7955bd22f1d1b9334edeb556efd40618156fa5523f2",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r03a",
+     "ev-req-r03b",
+     "ev-req-r03c"
+    ],
+    "reason": "Addresses significant control gaps for a mix of enterprise and mid-market accounts, impacting data integrity."
+   },
+   "strategicFit": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r03a",
+     "ev-req-r03b"
+    ],
+    "reason": "Strong alignment with Enterprise Readiness (approval controls) and Platform Trust (accuracy)."
+   },
+   "evidenceStrength": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r03a",
+     "ev-req-r03b",
+     "ev-req-r03c"
+    ],
+    "reason": "Consistent feedback across three distinct accounts regarding operational risk."
+   },
+   "effort": {
+    "score": 0.5,
+    "citations": [
+     "ev-req-r03a"
+    ],
+    "reason": "Requires building an approval workflow engine which is moderately complex but well-understood."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 960
+ },
+ {
   "key": "0248eae54c13de31a41f599a59ffb0ea2fc2f9454f54c2527cba2634ac247c67",
   "stage": "adjudicate",
   "output": [
@@ -1405,6 +1447,43 @@
   "tokens": null
  },
  {
+  "key": "0aa3049a0cb0dee8877a383d8b89f3cd5760867c27fc91652a2a231c276269cf",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r11f"
+    ],
+    "reason": "Very low ARR impact from a single SMB customer asking for a minor convenience."
+   },
+   "strategicFit": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r11f"
+    ],
+    "reason": "Does not contribute to strategic goals related to finance team productivity or platform trust."
+   },
+   "evidenceStrength": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r11f"
+    ],
+    "reason": "Single anecdotal report from one account."
+   },
+   "effort": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r11f"
+    ],
+    "reason": "Implementing time-based notification suppression is a low-cost, low-impact developer task."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 977
+ },
+ {
   "key": "0c4ae07343fbe642ec77756b384a375d57f3ac53949d6924698a0d25fb4b6a14",
   "stage": "extract",
   "output": {
@@ -1784,6 +1863,45 @@
    }
   ],
   "tokens": 820
+ },
+ {
+  "key": "1318add12ec84409fba228ef6bdf7ef3b789b5e2ae598f24edd7282c25925e0f",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r10a",
+     "ev-req-r10b"
+    ],
+    "reason": "This poses a direct threat to platform trust, as customers are experiencing live billing errors due to the lack of a safe testing environment."
+   },
+   "strategicFit": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r10a",
+     "ev-req-r10c"
+    ],
+    "reason": "High alignment with the 'Platform trust' goal regarding accuracy, explainability, and preventing silent drift."
+   },
+   "evidenceStrength": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r10a",
+     "ev-req-r10b",
+     "ev-req-r10c"
+    ],
+    "reason": "Strong corroboration across customer feedback and engineering internal reporting regarding the lack of safe staging."
+   },
+   "effort": {
+    "score": 0.2,
+    "citations": [],
+    "reason": "Architecting a staging or sandbox environment for complex billing logic is a high-effort, long-term engineering task."
+   },
+   "confidence": 0.9,
+   "tension": "While the effort is high, the strategic necessity of ensuring billing accuracy makes this a priority."
+  },
+  "tokens": 971
  },
  {
   "key": "1376d1594b98a5d19238ec81d4bf457056f3c2cb3879ea8f34e7682cebc47ed8",
@@ -3334,6 +3452,43 @@
    0.039588
   ],
   "tokens": null
+ },
+ {
+  "key": "15db1dfda25010ae7e4a0fc7c31afb0eca0737391bdced8f1ff002940d315488",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r05b"
+    ],
+    "reason": "An enterprise client having to perform manual workarounds for core reconciliation indicates a severe failure of the product's primary value prop."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r05b"
+    ],
+    "reason": "Directly impacts 'One-day close' and 'Platform trust' goals."
+   },
+   "evidenceStrength": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r05b"
+    ],
+    "reason": "Single report from one enterprise account."
+   },
+   "effort": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r05b"
+    ],
+    "reason": "Reconciliation logic failures often require complex changes to the ledger integration engine."
+   },
+   "confidence": 0.6,
+   "tension": ""
+  },
+  "tokens": 953
  },
  {
   "key": "161c05d25869429bc1dbee05a5c30973f52206e0f99f2142c7248a75ba16fc2d",
@@ -15941,6 +16096,51 @@
   "tokens": null
  },
  {
+  "key": "3844cc95e829f3e770e2ff5011fde6eba22d6c852256efdc665e03a91168398d",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01d",
+     "ev-req-r01e",
+     "ev-req-r01g"
+    ],
+    "reason": "ERP sync is a high-value requirement that impacts retention for enterprise accounts and acts as a deal-closer for new business."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01d"
+    ],
+    "reason": "Directly advances the 'Close the month in one day' and 'Self-serve integrations' goals by removing manual re-entry."
+   },
+   "evidenceStrength": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r01b",
+     "ev-req-r01c",
+     "ev-req-r01d",
+     "ev-req-r01e",
+     "ev-req-r01g"
+    ],
+    "reason": "Multiple accounts across enterprise and mid-market segments have explicitly requested this or cited it as a deal blocker."
+   },
+   "effort": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r01b"
+    ],
+    "reason": "Building robust two-way ERP integrations is a high-effort, complex engineering endeavor."
+   },
+   "confidence": 0.9,
+   "tension": ""
+  },
+  "tokens": 1071
+ },
+ {
   "key": "3a4f29cee4aa6b051d56bdafb005acb2c8f42eef84a70dcfe574ecf805b4a5b8",
   "stage": "adjudicate",
   "output": [
@@ -17727,6 +17927,48 @@
   "tokens": 3725
  },
  {
+  "key": "41c48089791d92fbb6f51415d3a90882e9edfe11f0483b0aeb85ef2485290ee9",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02c",
+     "ev-req-r02e"
+    ],
+    "reason": "Affects enterprise accounts directly by causing manual work and creating uncertainty during QBRs."
+   },
+   "strategicFit": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02e"
+    ],
+    "reason": "Directly supports the Platform Trust and Enterprise Readiness goals by ensuring revenue data is explainable and auditable."
+   },
+   "evidenceStrength": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r02a",
+     "ev-req-r02c",
+     "ev-req-r02e"
+    ],
+    "reason": "Three independent sources, including two enterprise clients."
+   },
+   "effort": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r02a"
+    ],
+    "reason": "Implementing a granular audit log system is non-trivial if the current architecture does not support mutation tracking."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 960
+ },
+ {
   "key": "443307148001b2c1d08f4b7dbe246835dc80bcfe1d8a2fe36c88fbdc043f0696",
   "stage": "adjudicate",
   "output": [
@@ -19011,6 +19253,39 @@
   "tokens": 3893
  },
  {
+  "key": "4c9fdbc62cae5f53fcc21a4fc6eb561c1f25f6e1df83fef687b92817d03daa50",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r09b"
+    ],
+    "reason": "This represents a valid pain point for a mid-market user, but it lacks the enterprise-level churn risk or systemic impact found in other evidence."
+   },
+   "strategicFit": {
+    "score": 0.3,
+    "citations": [],
+    "reason": "Only loosely related to enterprise readiness and operational efficiency goals."
+   },
+   "evidenceStrength": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r09b"
+    ],
+    "reason": "Only one submission from a single mid-market account."
+   },
+   "effort": {
+    "score": 0.4,
+    "citations": [],
+    "reason": "Requires building a mobile-responsive approval experience or alternative verification method."
+   },
+   "confidence": 0.6,
+   "tension": ""
+  },
+  "tokens": 971
+ },
+ {
   "key": "4e1685240a9f25f2a382b9e059499946bc7c94221310ce298711e409ec712948",
   "stage": "score",
   "output": {
@@ -19051,6 +19326,46 @@
    "tension": ""
   },
   "tokens": 1057
+ },
+ {
+  "key": "4f2022d82ec3d28f975258c2022de6a8091f7533a25e43ca5732e613817fee32",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r05a",
+     "ev-req-r05c"
+    ],
+    "reason": "High-value enterprise clients are experiencing reporting inaccuracies, which directly impacts trust in financial data."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r05a"
+    ],
+    "reason": "Directly impacts the 'Platform trust' goal regarding accuracy and FX correctness."
+   },
+   "evidenceStrength": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r05a",
+     "ev-req-r05c",
+     "ev-req-r05d"
+    ],
+    "reason": "Multiple reports from both enterprise and mid-market segments confirm the issue."
+   },
+   "effort": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r05a"
+    ],
+    "reason": "FX accounting logic is often deeply coupled with legacy ledger architecture; high risk and complexity."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 953
  },
  {
   "key": "4f638c63e22754ef6b815b6a3dee09272289c540b9cc33afddb86a8b50413f3c",
@@ -23367,6 +23682,46 @@
    }
   ],
   "tokens": 3107
+ },
+ {
+  "key": "55a606127422f2bfd3ade66ce611f7b470fc20d9076524c0abe2bc83c06b950b",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r11g",
+     "ev-req-r11i"
+    ],
+    "reason": "Volume of alerts and organizational noise issues may impact user retention, even in the SMB segment."
+   },
+   "strategicFit": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r11i"
+    ],
+    "reason": "Scope-based notification filtering touches slightly on segregation of duties, which is an enterprise readiness signal."
+   },
+   "evidenceStrength": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r11g",
+     "ev-req-r11i"
+    ],
+    "reason": "Two distinct accounts reporting different types of notification-related friction."
+   },
+   "effort": {
+    "score": 0.5,
+    "citations": [
+     "ev-req-r11g",
+     "ev-req-r11i"
+    ],
+    "reason": "Addressing data scope for notifications may require non-trivial backend changes compared to simple digests."
+   },
+   "confidence": 0.6,
+   "tension": "While the impact is low, the request for scope-based filtering hints at enterprise-grade access control needs."
+  },
+  "tokens": 977
  },
  {
   "key": "55ba165c2b20b4c43c2b3cb5cc779d90472e79b528afdb22f308f87a59ef535e",
@@ -28295,6 +28650,43 @@
   "tokens": 1683
  },
  {
+  "key": "716b316b557ab3bd961a5de075f9f4dd2fd4775d79c6cf74a5465ba40015907d",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r07c"
+    ],
+    "reason": "Limited to a single request from a mid-market account, lacking the broader enterprise urgency of other backlog items."
+   },
+   "strategicFit": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r07c"
+    ],
+    "reason": "Addresses reporting needs which is secondary to the primary fiscal year goals of enterprise readiness and core integration efficiency."
+   },
+   "evidenceStrength": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r07c"
+    ],
+    "reason": "Single account evidence provides low signal for a broader platform-wide architectural change."
+   },
+   "effort": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r07c"
+    ],
+    "reason": "Similar in scope to other reporting features but currently lower priority."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 960
+ },
+ {
   "key": "71cb6d4b695d506c4415fe9657820acd0cc53585b2e1a441839ae92e7b7efed8",
   "stage": "adjudicate",
   "output": [
@@ -31000,6 +31392,43 @@
    0.002375
   ],
   "tokens": null
+ },
+ {
+  "key": "79ed99401329ad914f19f16f2cbc25ebc4a13bfab5b940927c9afe81c2a587d5",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.5,
+    "citations": [
+     "ev-req-r03d"
+    ],
+    "reason": "Focused on sales-cycle blockers rather than current user pain, though relevant for large deal acquisition."
+   },
+   "strategicFit": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r03d"
+    ],
+    "reason": "Supports Enterprise Readiness by meeting procurement and audit requirements for complex buyer organizations."
+   },
+   "evidenceStrength": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r03d"
+    ],
+    "reason": "Single point of evidence citing procurement questionnaires without specific customer names."
+   },
+   "effort": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r03d"
+    ],
+    "reason": "Developing configurable threshold logic depends on the maturity of the existing permissions/rule engine."
+   },
+   "confidence": 0.5,
+   "tension": "While this is a strategic blocker for sales, it lacks the depth of evidence found in current platform-trust issues."
+  },
+  "tokens": 960
  },
  {
   "key": "7a369a092fb1520e339d5863b66f4395addee75a8b28c4704a564d095890eea9",
@@ -33883,6 +34312,45 @@
   "tokens": 2896
  },
  {
+  "key": "87f96d88daea5f79385299d7eb5ad9896da248c9d20c754004b2fee2870e3805",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r08a",
+     "ev-req-r08b",
+     "ev-req-r08c",
+     "ev-req-r08d"
+    ],
+    "reason": "This is a productivity issue for mid-market and SMB accounts rather than a structural threat or a requirement for large-scale enterprise retention."
+   },
+   "strategicFit": {
+    "score": 0.2,
+    "citations": [],
+    "reason": "While it relates to manual work, it does not directly align with the core FY27 goals of enterprise readiness or the one-day close initiative."
+   },
+   "evidenceStrength": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r08a",
+     "ev-req-r08b",
+     "ev-req-r08c",
+     "ev-req-r08d"
+    ],
+    "reason": "Four distinct accounts have reported the same usability friction, indicating a broad need."
+   },
+   "effort": {
+    "score": 0.6,
+    "citations": [],
+    "reason": "Building bulk update capabilities is a standard UI/UX task, likely moderate in cost."
+   },
+   "confidence": 0.8,
+   "tension": "While the issue is widely felt by the customer base, it is an operational convenience rather than a strategic imperative."
+  },
+  "tokens": 971
+ },
+ {
   "key": "8a7bc273dd0ad6a1183bf16b14e5f9b6894c8a50a96876426a98ac8f382b2efc",
   "stage": "adjudicate",
   "output": [
@@ -35034,6 +35502,47 @@
    }
   ],
   "tokens": 3038
+ },
+ {
+  "key": "92a01f29405470bdce74363c9c7844fe42faf026fc959960e4a6690809f5a7cd",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r11a",
+     "ev-req-r11h"
+    ],
+    "reason": "Affects multiple SMB accounts but represents a convenience issue rather than a blocker for high-value enterprise growth."
+   },
+   "strategicFit": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r11a",
+     "ev-req-r11h"
+    ],
+    "reason": "Email notification management does not align with core FY27 goals of enterprise readiness, integration, or reconciliation accuracy."
+   },
+   "evidenceStrength": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r11a",
+     "ev-req-r11h"
+    ],
+    "reason": "Two distinct small-segment customers reported the same friction point."
+   },
+   "effort": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r11a",
+     "ev-req-r11h"
+    ],
+    "reason": "Likely moderate complexity to implement user-level notification preferences or digest logic."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 977
  },
  {
   "key": "92a4ff2ddf92486917a68a79f606fa084240d82052fe89881488964891beb0a0",
@@ -38908,6 +39417,49 @@
   "tokens": null
  },
  {
+  "key": "a03b58d4730d89e294ca1af9cfe20014cc16d4d2b63f8cc37873d9514fae053a",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r11b",
+     "ev-req-r11c",
+     "ev-req-r11d",
+     "ev-req-r11e"
+    ],
+    "reason": "The issue causes friction and UX pain for SMB accounts but does not represent a direct threat to renewal or significant revenue."
+   },
+   "strategicFit": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r11b"
+    ],
+    "reason": "Notification settings do not align with any of the stated FY27 strategic goals."
+   },
+   "evidenceStrength": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r11b",
+     "ev-req-r11c",
+     "ev-req-r11d",
+     "ev-req-r11e"
+    ],
+    "reason": "Four distinct SMB accounts report similar pain, suggesting a recurring usability issue."
+   },
+   "effort": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r11c"
+    ],
+    "reason": "Providing granular notification controls is likely a contained frontend and message-routing task."
+   },
+   "confidence": 0.7,
+   "tension": "This is a widely-felt usability problem that does not contribute to the company's core strategic goals."
+  },
+  "tokens": 1071
+ },
+ {
   "key": "a066f6ae9be9298f9fcf15dfa4486e23910a15d7e5adfa95396bbb0639dbb7c6",
   "stage": "adjudicate",
   "output": [
@@ -38979,6 +39531,43 @@
    }
   ],
   "tokens": 2068
+ },
+ {
+  "key": "a20f0d02a71285804ad80a5f91a44259640cd99a5beaab6af6f9c150d3defdb7",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r09a",
+     "ev-req-r09c"
+    ],
+    "reason": "This is an enterprise churn risk for a $640k ARR account where the core approval workflow is failing to meet stakeholder accessibility needs."
+   },
+   "strategicFit": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r09a"
+    ],
+    "reason": "Directly impacts 'Enterprise readiness' by addressing critical procurement and approval control barriers for high-value accounts."
+   },
+   "evidenceStrength": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r09a",
+     "ev-req-r09c"
+    ],
+    "reason": "High-value, high-stakes evidence from one enterprise account, though limited in unique count."
+   },
+   "effort": {
+    "score": 0.3,
+    "citations": [],
+    "reason": "Designing secure, email-based or mobile-friendly lightweight approvals is a complex engineering and security challenge."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 971
  },
  {
   "key": "a281239800eedd0f10f4fa7df44b1e9824b887456aee818e5f99016e8093f4cb",
@@ -39664,6 +40253,43 @@
    }
   ],
   "tokens": 2154
+ },
+ {
+  "key": "a6e26eadebafb53e390a6229dfea4a50af3f2e0f38ab1a606714ed1bae19268a",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r02b"
+    ],
+    "reason": "Directly tied to audit failures and compliance findings for a significant enterprise customer."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r02b"
+    ],
+    "reason": "This is a fundamental requirement for Platform Trust and a critical blocker for Enterprise Readiness (SOC 2)."
+   },
+   "evidenceStrength": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r02b"
+    ],
+    "reason": "While vivid and high impact, it is driven heavily by one specific enterprise account's audit experience."
+   },
+   "effort": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r02b"
+    ],
+    "reason": "Building an immutable audit trail requires structural changes to data writes."
+   },
+   "confidence": 0.7,
+   "tension": ""
+  },
+  "tokens": 960
  },
  {
   "key": "a8fed768a84649e81f7dd9b9715ddcac2b86e4056eed0cb52bdd6cd1ae3101f5",
@@ -40627,6 +41253,47 @@
    0.002349
   ],
   "tokens": null
+ },
+ {
+  "key": "ab665e55a8f46613afd14e5c7b0aade1f431c998dcffe8160a2ca35d83c5f203",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 1,
+    "citations": [
+     "ev-req-r12a",
+     "ev-req-r12b",
+     "ev-req-r12c"
+    ],
+    "reason": "This is a direct blocker for high-ARR enterprise accounts and threatens multiple renewals and expansion revenue."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r12a"
+    ],
+    "reason": "Data residency is a core requirement listed explicitly under the Enterprise readiness goal."
+   },
+   "evidenceStrength": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r12a",
+     "ev-req-r12b",
+     "ev-req-r12c"
+    ],
+    "reason": "Multiple large enterprise customers have cited this as a hard legal or procurement blocker."
+   },
+   "effort": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r12a"
+    ],
+    "reason": "Architectural changes for data residency are typically high-effort, complex engineering projects."
+   },
+   "confidence": 0.9,
+   "tension": ""
+  },
+  "tokens": 1071
  },
  {
   "key": "ac06fd3fa4dee04c32da0b5994128a1e6f622f7354e416da64e19f63c7176033",
@@ -42382,6 +43049,45 @@
   "tokens": 835
  },
  {
+  "key": "b539b7d81e1432de5d137739c01e2e2932ec5c070f34c57f92f513b5d26222ce",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r01a",
+     "ev-req-r01f"
+    ],
+    "reason": "While it causes workflow inefficiency for one large account and one SMB, it is a convenience request rather than a structural blocker."
+   },
+   "strategicFit": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r01a"
+    ],
+    "reason": "CSV exports support the Self-serve integrations goal by facilitating data portability."
+   },
+   "evidenceStrength": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r01a",
+     "ev-req-r01f"
+    ],
+    "reason": "Only two accounts have specifically requested this feature."
+   },
+   "effort": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r01a"
+    ],
+    "reason": "Adding a CSV export for existing invoice data is a low-effort engineering task."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 1071
+ },
+ {
   "key": "b560372636536c1f0200d1430310cbf7b160614633afaf1e2ad90224ea411503",
   "stage": "embed",
   "output": [
@@ -43167,6 +43873,43 @@
    "confidence": 0.8
   },
   "tokens": 825
+ },
+ {
+  "key": "b633242b072464b0cf625c4bbbd81bbf28834a34581bf235b6fe12440e4c406e",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r03e"
+    ],
+    "reason": "This is a direct blocker for an enterprise-tier client and touches fundamental audit compliance."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r03e"
+    ],
+    "reason": "Explicitly listed as a required signal for the 'Enterprise readiness' goal."
+   },
+   "evidenceStrength": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r03e"
+    ],
+    "reason": "Single enterprise account report; high importance but lacks breadth of corroboration."
+   },
+   "effort": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r03e"
+    ],
+    "reason": "Implementing internal approval workflows typically requires significant backend and UI state-machine changes."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 953
  },
  {
   "key": "b8a239ebbb5ac8b17888016ff1dc3d5c044ca07e30fe9b18529e0d79453fc6f1",
@@ -46067,6 +46810,49 @@
    }
   ],
   "tokens": 2524
+ },
+ {
+  "key": "cc650f2b05e3bf9ab0042273f1ceae4763162294c4a2e5c84ae483c3742ba3ec",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r06a",
+     "ev-req-r06b",
+     "ev-req-r06c"
+    ],
+    "reason": "This is a critical blocker for high-value enterprise renewals and new deal closures, directly impacting significant ARR."
+   },
+   "strategicFit": {
+    "score": 1,
+    "citations": [
+     "ev-req-r06a",
+     "ev-req-r06b",
+     "ev-req-r06c"
+    ],
+    "reason": "SSO/SCIM is explicitly listed as a signal for the 'Enterprise readiness' goal, which is a top strategic priority."
+   },
+   "evidenceStrength": {
+    "score": 0.9,
+    "citations": [
+     "ev-req-r06a",
+     "ev-req-r06b",
+     "ev-req-r06c"
+    ],
+    "reason": "Multiple enterprise accounts are providing independent, consistent reports of this as a security and procurement hurdle."
+   },
+   "effort": {
+    "score": 0.3,
+    "citations": [
+     "ev-req-r06a"
+    ],
+    "reason": "Implementing secure SSO/SCIM integrations correctly is a complex infrastructure task that requires significant engineering time."
+   },
+   "confidence": 0.9,
+   "tension": ""
+  },
+  "tokens": 960
  },
  {
   "key": "cccb54daebfc6a3dca615180271b040418b6ee5332d1ac3c51f743b2ad542970",
@@ -49592,6 +50378,46 @@
   "tokens": 3432
  },
  {
+  "key": "deb9d4b9d180775d7b2c0ae50cda43e14f397f12f5b000ff09373f083c73ed78",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.4,
+    "citations": [
+     "ev-req-r04a",
+     "ev-req-r04b",
+     "ev-req-r04c"
+    ],
+    "reason": "Largely a brand-management and efficiency request; improves CX but does not threaten renewal or core functionality."
+   },
+   "strategicFit": {
+    "score": 0.1,
+    "citations": [],
+    "reason": "This problem does not map to any of the four stated strategic goals for FY27."
+   },
+   "evidenceStrength": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r04a",
+     "ev-req-r04b",
+     "ev-req-r04c",
+     "ev-req-r04d"
+    ],
+    "reason": "Strong corroboration across multiple accounts and internal team feedback."
+   },
+   "effort": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r04a"
+    ],
+    "reason": "Likely involves adding configuration options to existing communication templates, which is moderately low effort."
+   },
+   "confidence": 0.9,
+   "tension": "There is a tension between high evidence volume and low strategic relevance."
+  },
+  "tokens": 953
+ },
+ {
   "key": "e0ad99024cc2be519a54ea1f5fcd1b77e4d9f8e615c0339482bbf782c254774a",
   "stage": "extract",
   "output": {
@@ -52508,6 +53334,43 @@
    }
   ],
   "tokens": 3311
+ },
+ {
+  "key": "ed41003958ee8c54a9ac598bb8e4efed80bb185eaa7c5ae2b86e84eae9142b4f",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r06d"
+    ],
+    "reason": "While inefficient, the impact is primarily internal support resource consumption rather than a blocker for customer revenue or enterprise security."
+   },
+   "strategicFit": {
+    "score": 0.1,
+    "citations": [
+     "ev-req-r06d"
+    ],
+    "reason": "This does not align with the stated goal of enterprise readiness, which prioritizes customer-facing security controls over internal support workflow optimization."
+   },
+   "evidenceStrength": {
+    "score": 0.2,
+    "citations": [
+     "ev-req-r06d"
+    ],
+    "reason": "This is an internal observation with no external account corroboration."
+   },
+   "effort": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r06d"
+    ],
+    "reason": "Reducing manual support tasks via better internal tooling is generally cheaper than building full enterprise-grade customer-facing SSO."
+   },
+   "confidence": 0.7,
+   "tension": "While internally beneficial, this lacks the strategic urgency of customer-facing security initiatives."
+  },
+  "tokens": 960
  },
  {
   "key": "eea269c065f5d0a9dc75df475eec5e4e1013e84707f4fcebca0ddfe89f3f09e6",
@@ -55528,6 +56391,48 @@
    0.020983
   ],
   "tokens": null
+ },
+ {
+  "key": "faed64e9fe6a1d64cf2dc20198676911d3cb18d8647bf6be5921f390e8530264",
+  "stage": "score",
+  "output": {
+   "customerValue": {
+    "score": 0.7,
+    "citations": [
+     "ev-req-r07a",
+     "ev-req-r07b",
+     "ev-req-r07d"
+    ],
+    "reason": "High-value enterprise customers are currently forced to use external workarounds, indicating a failure to meet basic reporting needs for revenue ops."
+   },
+   "strategicFit": {
+    "score": 0.6,
+    "citations": [
+     "ev-req-r07a",
+     "ev-req-r07d"
+    ],
+    "reason": "This touches on 'Platform trust' and 'One-day close' by improving data granularity and reducing manual reconciliation via external spreadsheets."
+   },
+   "evidenceStrength": {
+    "score": 0.8,
+    "citations": [
+     "ev-req-r07a",
+     "ev-req-r07b",
+     "ev-req-r07d"
+    ],
+    "reason": "Strong corroboration from multiple accounts across both enterprise and mid-market segments."
+   },
+   "effort": {
+    "score": 0.5,
+    "citations": [
+     "ev-req-r07a"
+    ],
+    "reason": "Building reporting dimensions involves moderate effort in data schema updates and UI design."
+   },
+   "confidence": 0.8,
+   "tension": ""
+  },
+  "tokens": 960
  },
  {
   "key": "faeeca091417a17e3a9225ead9efc525c7b76575176ecb5274df984eb03bb0fa",

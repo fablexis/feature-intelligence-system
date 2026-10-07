@@ -94,19 +94,36 @@ citing the enterprise accounts, `strategic_fit` citing the enterprise-readiness
 goal, `evidence_strength` honestly *lower*. The score doesn't hide the tension —
 it shows a PM the trade and makes them own it.
 
-> **Not yet true on this build — say so.** Factor recording stopped on the
-> `gemini-3.8-flash` daily cap with **4 of 23 problems scored**, and neither of
-> these two is among them ([TASKS C5](./TASKS.md#c5--explainable-priority--25-min)).
-> Both show as `unscored` on the board, which withholds a band rather than
-> guessing one. What a reviewer *can* see today is the mechanism on the four
-> scored problems — accounts and ARR beside every band, factors with their
-> citations, the weights file, and the override-with-reason flow — plus the
-> weights that decide the trade: customer value and strategic fit carry 0.70
-> between them against evidence strength's 0.20, and a unit test asserts a
-> narrow-but-strategic profile outranks a broad-but-unaligned one. The ordering
-> claim itself is **unmeasured on this corpus** until `npm run score` finishes
-> the remaining five batches after the daily reset. Don't assert it from the
-> stage; show the weights and the test, or run the five calls first.
+**Measured on this corpus, all 23 problems scored.** Data residency is **#1 on
+the board**; notification scoping's largest fragment is **#19 of 23**:
+
+| | Data residency | Notification scoping *(largest fragment)* |
+|---|---|---|
+| Distinct accounts | **3** | **4** |
+| Band | **now** | **no** |
+| Raw score | 0.890 | 0.305 |
+| `customer_value` | 1.00 — "direct blocker for high-ARR enterprise accounts, threatens multiple renewals" | 0.20 — "friction and UX pain for SMB accounts, not a direct threat to renewal" |
+| `strategic_fit` | 1.00 — "listed explicitly under the Enterprise readiness goal" | 0.10 — "does not align with any of the stated FY27 strategic goals" |
+| `evidence_strength` | 0.90 | 0.60 |
+| `effort` | 0.10 — architectural, high cost | 0.80 — contained frontend work |
+| Confidence | 0.90 | 0.70 |
+
+**Fewer accounts, higher band.** That is the whole claim, and the decomposition
+shows exactly where it comes from: `strategic_fit` 1.00 against 0.10. The model
+volunteered the tension on the losing side without being asked for it —
+*"this is a widely-felt usability problem that does not contribute to the
+company's core strategic goals"* — which is the sentence a PM should have to
+argue with.
+
+Note the one place to be honest under questioning: `evidence_strength` is
+**0.90 for three accounts and 0.60 for four**, which is backwards for a factor
+defined as a raw distinct-account count. The model imported segment and ARR
+into it, double-counting what `customer_value` already carries. It does not
+change the outcome — recomputing with a count-faithful evidence strength leaves
+both bands where they are, because the 0.70 of weight on value and fit
+dominates — but it is a prompt defect, recorded in
+[TASKS C5](./TASKS.md#c5--explainable-priority--25-min). The board showing the
+raw account count beside the band is what makes it visible at all.
 
 ---
 
@@ -189,6 +206,19 @@ Say these before a reviewer finds them:
 - **No support rows are seeded.** "Nine accounts" above means nine accounts
   that independently wrote in — evidence breadth, not clicks on a button. The
   one-click support action is live in the UI for a reviewer to use.
+- **The factor estimates come from the fast model, and nothing measures them.**
+  Scoring was moved off the strong tier because intermittent 503s burned its
+  daily cap ([ADR 0001](./adr/0001-llm-provider.md), third amendment). The eval
+  harness measures dedupe, not scores, so there is no before/after comparison
+  and no quality number to quote here. The structural answer is the one the
+  design already rested on: the factors are estimates, the weights are
+  PM-owned, and every band is overridable with a recorded reason.
+- **One factor contradicts its own definition.** `evidence_strength` is
+  supposed to be a raw distinct-account count, with ARR and segment reaching
+  the score only through `customer_value`. The model weights segment into it
+  anyway. It does not change any band on this corpus, and it is visible because
+  the board prints the real account count next to the estimate — but it is a
+  defect, not a subtlety.
 - **No PM reviewed the seeded problem set.** The ingest pass ran with nobody
   present, so an attach on a lower-confidence `same` verdict stands in for a
   PM having confirmed it. A real PM could have rejected some of those, and the

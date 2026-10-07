@@ -91,3 +91,62 @@ model, the cheap move is to stop and resume after the daily reset rather than
 to retry into the cap. Fixtures checkpoint per call, so a resumed run spends
 quota only on what is still missing — `npm run score -- --dry-run` reports
 exactly that number before anything is spent.
+
+## Third amendment, 2026-10-07 — scoring moved to the fast tier
+
+**Factor scoring now runs on `GEMINI_MODEL_FAST`'s model, not the strong
+tier.** The reason is not quality, it is quota: the second amendment above
+records that intermittent 503s burned the strong tier's measured 20/day cap
+while producing one usable batch out of six. Waiting for the daily reset was
+the alternative; moving bucket cost nothing and worked immediately.
+
+### Why sharing a bucket is safe *now* and was not before
+
+The original design gave each `generate_content` stage its own model so one
+exhausted cap could stall at most one stage, and `renderBudget()` verified that
+rather than asserting it. Scoring now shares the fast tier with extraction,
+which looks like a violation of exactly that rule.
+
+It isn't, because **extraction is finished.** All 56 extractions are recorded
+and committed; a stage with complete fixtures makes no further calls, so it
+cannot be stalled and cannot stall anything else. The check was therefore
+changed to match the real invariant: `sharedBuckets()` now takes the set of
+stages that *still need quota* and only warns when two of those collide.
+Sharing with a completed stage is reported as a note, because it is the escape
+hatch available when a model's cap is gone for the day — and a check that
+flagged it as a danger would have blocked the only move left.
+
+The same reasoning covers adjudication, which is also fully recorded. If
+extraction's prompt were ever edited, its 56 fixtures would invalidate, it
+would need quota again, and the collision would become real — at which point
+the budget check reports it, which is the behaviour that matters.
+
+### The quality tradeoff, stated plainly
+
+The fast tier is a smaller model than the one the pipeline's judgement stages
+were designed around, and factor estimation is the most judgement-heavy call in
+the system: it reads prose and assigns four defensible numbers with citations.
+So this is a real downgrade, not a free lunch:
+
+- **It is not measured.** Nothing in this build scores the scores. The eval
+  harness measures *dedupe* ([C7](../TASKS.md#c7--eval-harness--20-min)), which
+  is why batching was judged safe here in the first place. There is no
+  before/after comparison available, because the strong tier produced only one
+  batch before its cap went — too few to compare against.
+- **What the output looks like is reasonable but not above criticism.** The
+  estimates are well-formed, cite real evidence ids, and the Beat 2 contrast
+  comes out correctly and with a large margin. One defect is visible, recorded
+  under [C5](../TASKS.md#c5--explainable-priority--25-min): the model's
+  `evidenceStrength` imports segment and ARR, contradicting the raw-count
+  definition that [ARCHITECTURE](../ARCHITECTURE.md#data-model) settled open
+  question 2 on. That is a prompt gap, not obviously a model-size gap.
+- **The mitigation is structural, and predates this choice.** Factors are
+  estimates a PM overrides with a reason; the weights are PM-owned; the board
+  shows the raw distinct-account count beside every band precisely so a reader
+  can disagree with the estimate. A weaker estimator makes the override path
+  more load-bearing, not less valid.
+
+**If quota were not the binding constraint, the strong tier is the right place
+for this stage.** Revisit when the cap resets and there is budget to record
+both and compare — which would also be the first measurement of scoring
+quality this project has.
