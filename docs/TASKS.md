@@ -46,6 +46,8 @@ Three non-obvious reasons:
 - [ ] Unrecorded input falls back to n-grams and sets `degraded: true`
 - [ ] Every call writes one `ai_decisions` row with stage, model ID, latency and token usage
 - [ ] Model IDs are read from env; `grep -r "gemini-" src/ lib/` returns nothing
+- [ ] **Record script is quota-safe:** throttled, retries 429/5xx with exponential backoff, and **resumable** — re-running skips inputs already recorded by hash
+- [ ] **`--dry-run` prints the expected call count per stage** before any quota is spent
 
 **Actual:** · **Status:** Todo · **Deviation:**
 

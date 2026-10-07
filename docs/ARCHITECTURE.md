@@ -36,7 +36,7 @@ Drizzle + SQLite. Append-only tables are never updated in place — history is t
 | `evidence_links` | `request_id`, `problem_id`, `created_by` (ai/human), `confidence`, `suggestion_id`, `active` | **Reversibility unit.** Un-merge flips `active`; nothing is deleted. |
 | `problem_links` | `problem_a_id`, `problem_b_id`, `kind` (`related`) | Keeps "same problem, different scope" as distinct information. |
 | `supports` | `problem_id`, `account_id`, `actor` — unique on (problem, account) | The re-pointed vote: one click, attached to a problem. |
-| `ai_decisions` | `stage`, `provider`, `model_id`, `input_hash`, `output_json`, `confidence`, `latency_ms`, `tokens`, `created_at` | Audit log for **every** model call. Makes any AI output traceable after the fact. |
+| `ai_decisions` | `stage`, `provider`, `model_id`, `prompt_version`, `input_hash`, `output_json`, `confidence`, `latency_ms`, `tokens`, `created_at` | Audit log for **every** model call. Makes any AI output traceable after the fact — including *which prompt version* produced it. |
 | `dedupe_suggestions` | `request_id`, `candidate_problem_id`, `similarity`, `verdict`, `rationale`, `human_action` (auto/accepted/related/rejected), `acted_at` | Powers **M1**. Rejected suggestions are retained — that's what makes the counterfactual computable. |
 | `human_overrides` | `target_type`, `target_id`, `field`, `suggested_value`, `final_value`, `reason`, `actor` | Append-only. Powers **M3**; suggested and final both retained forever. |
 | `score_runs` | `problem_id`, `weights_version`, `factors_json` (with evidence-id citations), `raw_score`, `band`, `confidence`, `model_id` | Append-only. A re-score adds a row; it never overwrites one. |

@@ -86,3 +86,30 @@ Stop after writing these.
 
 RESPONSE (entry 6):
 Wrote docs/ARCHITECTURE.md (components table, 10-table data model, 6-stage pipeline table with input/output schema/tier/latency budget/fallback per stage, threshold selection rule from the eval curve, untrusted-input safety section, six H1-H6 human-in-the-loop points, and a Mermaid intake-flow diagram). Checked Google's live docs for ADR 0001: current IDs are gemini-3.8-flash (stable fast), gemini-3.1-pro-preview (strong, preview-only), gemini-embedding-001 (stable); the free tier still exists but Google no longer publishes its limits on the rate-limits page, so the ADR records that as a genuine unknown rather than inventing numbers, and defaults the strong tier to stable Flash to avoid a preview model deprecating mid-assessment. Wrote the five ADRs with context/decision/alternatives/consequences. Wrote docs/TASKS.md with C1-C8 and E1-E4, each carrying goal, testable checkbox criteria, dependencies, estimate and empty Actual/Status/Deviation fields, plus the proposed order C1 -> C6 -> C2 -> C3 -> C7 -> C4 -> C5 -> C8 and the three non-obvious ordering reasons. Resolved all three remaining PRODUCT open questions: #1 in ADR 0005 (confidence-banded split with a submitter escape hatch that makes false merges self-reporting), #2 raw distinct-account evidence strength with ARR entering only via customer_value to avoid double-counting, #3 partially - report-only with a hard floor in C7, full gating deferred to E4. Also added a finding from ADR 0002 that the eval must report stage-1 recall separately, since top-k retrieval caps recall and would otherwise be misread as an adjudication failure. Elapsed at completion: 54 min total (spec ~40, plan+tasks ~14). No code written.
+
+=== 2026-10-07T03:47:30Z ===
+PROMPT (verbatim):
+Append these sections to CLAUDE.md (keep the Prompt Logging rule intact and first), concise:
+
+## Prompt Log Format
+Each prompts.txt entry: "=== <ISO 8601> ===", then "PROMPT (verbatim):" with the exact text received (never paraphrased), then "RESPONSE:" with a brief summary. One entry per prompt, including short follow-ups and corrections.
+
+## Methodology
+Spec-driven development: docs/PRODUCT.md → docs/ARCHITECTURE.md + docs/adr/ → docs/TASKS.md → code. No code without a task ID (C1–C8, E1…). New work becomes a task first.
+
+## Task Workflow
+Explore (re-read the task, the relevant docs, and the code) → state a short plan → implement → verify each acceptance criterion → commit. Once C7 exists, any change to prompts, thresholds, or models requires an eval run (eval-driven development).
+
+## Definition of Done
+All acceptance criteria checked; typecheck, lint, and tests pass; docs updated if a decision changed; TASKS.md updated (Status, Actual time, Deviation from plan); prompts.txt updated; committed.
+
+## Commits
+Conventional commits with the task ID, e.g. "feat(C3): three-way resolution at intake". Never mix tasks in one commit.
+
+## Engineering Conventions
+Key commands (dev, test, typecheck, lint, seed, record, eval); folder structure per ARCHITECTURE.md; Vitest for tests; all model calls go through the AiProvider abstraction with Zod-validated structured output; prompts versioned in /prompts, with the version stored on every ai_decisions row; no secrets in code (.env.example only); respect the Non-goals in PRODUCT.md.
+
+Also add two acceptance criteria to C2 in TASKS.md, because Gemini's free-tier quota is unknown and recording makes ~200 calls: (1) the record script throttles, retries 429s/5xx with exponential backoff, and is resumable (it skips inputs already recorded by hash); (2) a dry-run flag prints the expected number of calls per stage before spending any quota.
+
+RESPONSE (entry 7):
+Appended six sections to CLAUDE.md (Prompt Log Format, Methodology, Task Workflow, Definition of Done, Commits, Engineering Conventions), leaving the original Prompt Logging rule unmodified and first. The new Prompt Log Format section closes a gap flagged in entry 2: the verbatim convention previously lived only in prompts.txt's own formatting and was not stated as a rule, so a future session had to infer it. Added the two quota-safety acceptance criteria to C2 in TASKS.md (throttled + backoff + hash-resumable record script; --dry-run call-count preview). Also added a prompt_version column to the ai_decisions row in ARCHITECTURE.md's data model, since CLAUDE.md now mandates storing the prompt version on every ai_decisions row and the schema did not yet have the field - ADR 0004 already used prompt_version in the fixture hash key, so the schema was the inconsistent one. No code written.
