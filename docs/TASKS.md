@@ -45,17 +45,25 @@ Three non-obvious reasons:
 **Goal:** all four model capabilities behind one interface, usable with or without a key.
 **Depends on:** C1, C6 · **ADR:** [0001](./adr/0001-llm-provider.md), [0004](./adr/0004-record-replay-provider.md)
 
-- [ ] `AiProvider` interface: `extractProblem`, `embed`, `adjudicate`, `estimateFactors`
-- [ ] Gemini implementation uses `generateObject` with Zod schemas for every non-embedding call
-- [ ] `npm run record` populates `fixtures/` for the whole seed corpus + scripted demo request
-- [ ] Replay provider resolves a recorded input by hash and returns the identical object twice in a row
-- [ ] Unrecorded input falls back to n-grams and sets `degraded: true`
-- [ ] Every call writes one `ai_decisions` row with stage, model ID, latency and token usage
-- [ ] Model IDs are read from env; `grep -r "gemini-" src/ lib/` returns nothing
-- [ ] **Record script is quota-safe:** throttled, retries 429/5xx with exponential backoff, and **resumable** — re-running skips inputs already recorded by hash
-- [ ] **`--dry-run` prints the expected call count per stage** before any quota is spent
+- [x] `AiProvider` interface: `extractProblem`, `embed`, `adjudicate`, `estimateFactors`
+- [x] Gemini implementation uses `generateObject` with Zod schemas for every non-embedding call
+- [ ] `npm run record` populates `fixtures/` for the whole seed corpus + scripted demo request — **blocked on go-ahead**; dry run verified at 60 API calls
+- [x] Replay provider resolves a recorded input by hash and returns the identical object twice in a row
+- [x] Unrecorded input falls back to n-grams and sets `degraded: true`
+- [x] Every call writes one `ai_decisions` row with stage, model ID, latency and token usage
+- [x] Model IDs are read from env; `grep -rn "gemini-[0-9]" src/ scripts/` returns nothing
+- [x] **Record script is quota-safe:** throttled, retries 429/5xx with exponential backoff, and **resumable** — re-running skips inputs already recorded by hash
+- [x] **`--dry-run` prints the expected call count per stage** before any quota is spent
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Actual:** ~8 min so far (est. 35) · **Status:** In progress — code complete and verified on the replay path; awaiting go-ahead to record fixtures · **Deviation:**
+- **Adjudication and factor fixtures cannot be recorded yet — confirmed, not assumed.** Adjudication's input is `(draft, retrieved candidates)`, and which candidates exist depends on which problems have been formed by the time each request arrives — i.e. on ingest order and on prior merge decisions, which need C3's pipeline and C7's thresholds. `estimateFactors` likewise needs formed problems with evidence sets. So this task records **extract + embed** (the two stateless stages), and `fixtures/manifest.json` carries a `pending` block naming both deferred stages and why. Record them immediately after C3.
+- **Embedding space is now a first-class type.** n-gram and Gemini vectors are not merely different in quality — cosine between them is **meaningless**, because they share no geometry. So `EmbedOutput` carries `space: 'gemini' | 'ngram'`, `problems.embedding_model` persists it, and **C3's retrieval must compare only within one space**. Without this the degraded path would return confident nonsense instead of honest misses.
+- **`EMBED_DIM` 768, not 3072**, requested via `outputDimensionality`. A quarter the fixture bytes, ample discrimination at a 12-problem scale, and embeddings are stored rounded to 6dp — far below cosine's sensitivity.
+- **Embeddings are batched** (`embedMany`, 16 per call), cutting the embed stage from 56 API calls to 4 — total 60 instead of 112. With unpublished free-tier limits that is the difference between a comfortable record run and an unknown risk.
+- **Env var is `GOOGLE_GENERATIVE_AI_API_KEY`**, which is what the AI SDK's Google provider reads by default, so the app never handles the value. `.env.example` had the wrong name (`GEMINI_API_KEY`) and was corrected. `requireGeminiConfig()` reports missing env **by name only**, asserted by a test.
+- **Prompt version is a content hash** (`v1-<sha8>` of the prompt file), so editing a prompt in `/prompts` automatically invalidates every fixture that depended on it. Staleness cannot be forgotten rather than merely being documented.
+- **`scripts/record.ts` wraps its body in `main()`.** tsx compiles to CJS (no `"type": "module"`), which rejects top-level await. A `.mts` rename would also work but makes the script's module format load-bearing.
+- **Fixtures hold model output only** — `{key, stage, output, tokens}` and nothing else. Three tests guard it: no Google API-key shape, no auth/api-key field names, and no keys beyond that whitelist.
 
 ### C3 — Intake pipeline + three-way resolution · 40 min
 **Goal:** the centerpiece. Submit → extract → embed → retrieve → adjudicate → resolve, in one interaction.
