@@ -106,7 +106,7 @@ export function createReplayProvider(fixtures = loadFixtures()): AiProvider {
     async adjudicate(input: AdjudicateInput): Promise<AiResult<Verdict[]>> {
       const p = prompt.adjudicate();
       const ids = input.candidates.map((c) => c.problemId);
-      const { key, hit } = look('adjudicate', cfg.modelStrong, p.version, input);
+      const { key, hit } = look('adjudicate', cfg.modelAdjudicate, p.version, input);
       if (hit) {
         const parsed = VerdictSchema.array().safeParse(hit.output);
         if (parsed.success) {
@@ -115,24 +115,24 @@ export function createReplayProvider(fixtures = loadFixtures()): AiProvider {
           const missing = ids.filter((id) => !verdicts.some((v) => v.problemId === id));
           return {
             value: [...verdicts, ...safeDistinct(missing, 'no recorded verdict for this candidate')],
-            meta: meta(cfg.modelStrong, p.version, key, false, hit.tokens),
+            meta: meta(cfg.modelAdjudicate, p.version, key, false, hit.tokens),
           };
         }
       }
       // No adjudication without a model: never merge on a guess.
       return {
         value: safeDistinct(ids, 'unverified — no model available, so no merge was proposed'),
-        meta: meta(cfg.modelStrong, p.version, key, true),
+        meta: meta(cfg.modelAdjudicate, p.version, key, true),
       };
     },
 
     async estimateFactors(input: FactorsInput) {
       const p = prompt.factors();
-      const { key, hit } = look('score', cfg.modelStrong, p.version, input);
+      const { key, hit } = look('score', cfg.modelScore, p.version, input);
       if (hit) {
         const parsed = FactorsSchema.safeParse(hit.output);
         if (parsed.success) {
-          return { value: parsed.data, meta: meta(cfg.modelStrong, p.version, key, false, hit.tokens) };
+          return { value: parsed.data, meta: meta(cfg.modelScore, p.version, key, false, hit.tokens) };
         }
       }
       const unknown = { score: 0, citations: [], reason: 'no model available' };
@@ -145,7 +145,7 @@ export function createReplayProvider(fixtures = loadFixtures()): AiProvider {
           confidence: 0,
           tension: '',
         },
-        meta: meta(cfg.modelStrong, p.version, key, true),
+        meta: meta(cfg.modelScore, p.version, key, true),
       };
     },
   };

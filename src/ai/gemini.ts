@@ -24,6 +24,15 @@ function untrusted(label: string, body: string) {
   return `<${label}>\n${body}\n</${label}>`;
 }
 
+/**
+ * The SDK retries internally (default 2, so 3 attempts per call). Left on, it
+ * multiplies against the record script's own retry loop — up to 12 real API
+ * calls for one logical call, which is how a 20/day free-tier cap was
+ * exhausted by 7 extractions. Retrying is owned in exactly one place:
+ * `scripts/record.ts`.
+ */
+const NO_SDK_RETRY = { maxRetries: 0 } as const;
+
 const timed = async <T>(fn: () => Promise<T>): Promise<[T, number]> => {
   const start = Date.now();
   const value = await fn();
@@ -51,6 +60,7 @@ export function createGeminiProvider(): AiProvider & {
     const [res, latencyMs] = await timed(() =>
       embedMany({
         model: google.textEmbeddingModel(cfg.modelEmbed),
+        ...NO_SDK_RETRY,
         values: texts,
         providerOptions: { google: { outputDimensionality: cfg.embedDim } },
       }),
@@ -70,6 +80,7 @@ export function createGeminiProvider(): AiProvider & {
       const [res, latencyMs] = await timed(() =>
         generateObject({
           model: google(cfg.modelFast),
+          ...NO_SDK_RETRY,
           schema: ProblemDraftSchema,
           system: p.text,
           prompt: [
@@ -95,7 +106,8 @@ export function createGeminiProvider(): AiProvider & {
       const ids = input.candidates.map((c) => c.problemId);
       const [res, latencyMs] = await timed(() =>
         generateObject({
-          model: google(cfg.modelStrong),
+          model: google(cfg.modelAdjudicate),
+          ...NO_SDK_RETRY,
           schema: AdjudicationSchema,
           system: p.text,
           prompt: [
@@ -110,7 +122,7 @@ export function createGeminiProvider(): AiProvider & {
       const missing = ids.filter((id) => !verdicts.some((v) => v.problemId === id));
       return {
         value: [...verdicts, ...safeDistinct(missing, 'no verdict returned for this candidate')],
-        meta: meta('adjudicate', cfg.modelStrong, p.version, input, latencyMs, res.usage?.totalTokens),
+        meta: meta('adjudicate', cfg.modelAdjudicate, p.version, input, latencyMs, res.usage?.totalTokens),
       };
     },
 
@@ -118,7 +130,8 @@ export function createGeminiProvider(): AiProvider & {
       const p = prompt.factors();
       const [res, latencyMs] = await timed(() =>
         generateObject({
-          model: google(cfg.modelStrong),
+          model: google(cfg.modelScore),
+          ...NO_SDK_RETRY,
           schema: FactorsSchema,
           system: p.text,
           prompt: [
@@ -130,7 +143,7 @@ export function createGeminiProvider(): AiProvider & {
       );
       return {
         value: res.object,
-        meta: meta('score', cfg.modelStrong, p.version, input, latencyMs, res.usage?.totalTokens),
+        meta: meta('score', cfg.modelScore, p.version, input, latencyMs, res.usage?.totalTokens),
       };
     },
 

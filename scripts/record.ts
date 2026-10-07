@@ -13,12 +13,15 @@
  * Only extraction and embeddings are recordable before C3 exists; see
  * docs/TASKS.md#c2.
  */
+import { renderBudget } from '../src/ai/budget';
 import { canonicalText } from '../src/ai/canonical';
 import { aiConfig, requireGeminiConfig } from '../src/ai/config';
+import { MAX_WAIT_MS, classify, describeExhausted } from '../src/ai/errors';
 import { type FixtureEntry, loadFixtures, round6, saveFixtures, saveManifest } from '../src/ai/fixtures';
 import { createGeminiProvider } from '../src/ai/gemini';
 import { fixtureKey } from '../src/ai/hash';
 import { EMBED_PROMPT_VERSION, prompt } from '../src/ai/prompts';
+import { ProblemDraftSchema } from '../src/ai/schemas';
 import { DEMO_REQUEST, SEED_REQUESTS } from '../src/seed/requests';
 
 const dryRun = process.argv.includes('--dry-run');
@@ -48,13 +51,32 @@ const embedKey = (text: string) =>
 
 const pendingExtract = extractJobs.filter((j) => !fixtures.has(extractKey(j)));
 
+/**
+ * Every recorded extraction whose canonical text has no embedding yet.
+ * Derived from the fixture store so it is correct across resumed runs.
+ */
+function missingEmbeddings(): Array<{ text: string; key: string }> {
+  const out = new Map<string, string>();
+  for (const entry of fixtures.values()) {
+    if (entry.stage !== 'extract') continue;
+    const draft = ProblemDraftSchema.safeParse(entry.output);
+    if (!draft.success) continue;
+    const text = canonicalText(draft.data);
+    const key = embedKey(text);
+    if (!fixtures.has(key)) out.set(key, text);
+  }
+  return [...out.entries()].map(([key, text]) => ({ key, text }));
+}
+
 // ─── dry run ────────────────────────────────────────────────────────────────
 
 const embedBatches = (n: number) => Math.ceil(n / cfg.embedBatchSize);
 
 if (dryRun) {
   const recordedExtract = extractJobs.length - pendingExtract.length;
-  const embedTexts = pendingExtract.length; // one statement per new extraction
+  // Counted from the fixture store, so a resumed run reports the real backlog
+  // including extractions recorded by an earlier run that died before embedding.
+  const embedTexts = missingEmbeddings().length + pendingExtract.length;
   const apiCalls = pendingExtract.length + embedBatches(embedTexts);
 
   console.log('DRY RUN — no API calls made, no quota spent\n');
@@ -69,11 +91,18 @@ if (dryRun) {
   console.log(`adjudicate   ${pad(0)}   ${pad(0)}       deferred — inputs depend on pipeline state (C3)`);
   console.log(`factors      ${pad(0)}   ${pad(0)}       deferred — needs formed problems (C3, used by C5)`);
   console.log('─────────────────────────────────────────────────────────────────');
-  console.log(`TOTAL                ${pad(apiCalls)}       at ${cfg.recordRpm} rpm ≈ ${Math.ceil((apiCalls / cfg.recordRpm) * 60)}s\n`);
+  // Throttle gaps are the floor, not the estimate: a structured-output call
+  // against the fast tier measured 19-23s, and latency dominates by ~7x.
+  const throttleSec = Math.ceil((apiCalls / cfg.recordRpm) * 60);
+  const latencySec = apiCalls * 21;
+  console.log(
+    `TOTAL                ${pad(apiCalls)}       ~${Math.ceil((throttleSec + latencySec) / 60)}min (${latencySec}s latency + ${throttleSec}s throttle)\n`,
+  );
   console.log(`already recorded:    ${recordedExtract} extraction(s) — a re-run skips these`);
   console.log(`models:              fast=${cfg.modelFast || '(unset)'}  embed=${cfg.modelEmbed || '(unset)'}`);
   console.log(`prompt version:      extract=${extractPrompt.version}`);
   console.log(`api key present:     ${process.env.GOOGLE_GENERATIVE_AI_API_KEY ? 'yes' : 'no'}`);
+  console.log(renderBudget());
   process.exit(0);
 }
 
@@ -82,29 +111,27 @@ if (dryRun) {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const minGapMs = Math.ceil(60_000 / Math.max(cfg.recordRpm, 1));
 
-/** Retries 429 and 5xx with exponential backoff plus jitter. */
+class QuotaExhausted extends Error {}
+
+/**
+ * Retries transient failures; **refuses to retry an exhausted daily quota**,
+ * because its retry-after is measured in hours and backing off against it only
+ * burns wall-clock before failing anyway.
+ */
 async function withRetry<T>(label: string, fn: () => Promise<T>, attempt = 1): Promise<T> {
   try {
     return await fn();
   } catch (err) {
-    const status = extractStatus(err);
-    const retryable = status === 429 || (status >= 500 && status < 600) || status === 0;
-    if (!retryable || attempt >= 5) throw err;
-    const backoff = Math.min(2 ** attempt * 1000, 32_000) + Math.random() * 500;
-    console.warn(`  ${label}: ${status || 'network'} — retry ${attempt}/4 in ${Math.round(backoff)}ms`);
+    const c = classify(err);
+    if (c.kind === 'exhausted') throw new QuotaExhausted(describeExhausted(c));
+    if (c.kind === 'fatal' || attempt >= 5) throw err;
+    const backoff = Math.min(c.waitMs ?? 2 ** attempt * 1000, MAX_WAIT_MS) + Math.random() * 500;
+    console.warn(
+      `  ${label}: ${c.status || 'transport'} — retry ${attempt}/4 in ${Math.round(backoff)}ms`,
+    );
     await sleep(backoff);
     return withRetry(label, fn, attempt + 1);
   }
-}
-
-function extractStatus(err: unknown): number {
-  if (err && typeof err === 'object') {
-    for (const k of ['statusCode', 'status']) {
-      const v = (err as Record<string, unknown>)[k];
-      if (typeof v === 'number') return v;
-    }
-  }
-  return 0;
 }
 
 const put = (entry: FixtureEntry) => {
@@ -118,20 +145,19 @@ async function main() {
 
   console.log(`recording ${pendingExtract.length} extraction(s) at ${cfg.recordRpm} rpm\n`);
 
-  const statements: Array<{ text: string; key: string }> = [];
-
   for (const [i, job] of pendingExtract.entries()) {
     const result = await withRetry(`extract ${job.id}`, () =>
       provider.extractProblem({ title: job.title, bodyRaw: job.bodyRaw, source: job.source }),
     );
     put({ key: extractKey(job), stage: 'extract', output: result.value, tokens: result.meta.tokens });
-    const canonical = canonicalText(result.value);
-    if (!fixtures.has(embedKey(canonical))) {
-      statements.push({ text: canonical, key: embedKey(canonical) });
-    }
     console.log(`  [${i + 1}/${pendingExtract.length}] extract ${job.id} (${result.meta.latencyMs}ms)`);
     if (i < pendingExtract.length - 1) await sleep(minGapMs);
   }
+
+  // Embed work is derived from the WHOLE fixture store, not from this run's
+  // extractions. Deriving it from the run under-records on resume: a run that
+  // dies before the embed phase leaves its extractions permanently unembedded.
+  const statements = missingEmbeddings();
 
   console.log(`\nembedding ${statements.length} statement(s) in ${embedBatches(statements.length)} batch(es)\n`);
 
@@ -180,7 +206,13 @@ async function main() {
 
 main().catch((err) => {
   // Message only — an SDK error object can carry request details.
-  console.error(`record failed: ${err instanceof Error ? err.message : String(err)}`);
+  const recorded = loadFixtures().size;
+  if (err instanceof QuotaExhausted) {
+    console.error(`\nSTOPPED: ${err.message}`);
+    console.error(`${recorded} fixture(s) are saved and will be skipped on the next run.`);
+  } else {
+    console.error(`record failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
   process.exit(1);
 });
 

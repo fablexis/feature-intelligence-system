@@ -9,12 +9,15 @@ type yourself.
 ```bash
 npm install
 npm run db:migrate
-npm run seed        # 22 accounts, 55 requests, 0 problems
+npm run seed            # 22 accounts, 55 requests, 0 problems
+npm run verify:replay   # proves the keyless path serves real model output
 npm run dev
 ```
 
 No API key needed. The fixture provider replays real Gemini outputs recorded
-over this corpus ([ADR 0004](./adr/0004-record-replay-provider.md)).
+over this corpus ([ADR 0004](./adr/0004-record-replay-provider.md)), and
+`verify:replay` fails loudly if any input would silently fall back to the
+n-gram path instead.
 
 ---
 

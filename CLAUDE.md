@@ -50,7 +50,11 @@ Conventional commits carrying the task ID — e.g. `feat(C3): three-way resoluti
 
 ## Engineering Conventions
 
-**Commands** (established by C1): `npm run dev` · `test` · `typecheck` · `lint` · `seed` · `record` · `eval`
+**Commands**: `npm run dev` · `test` · `typecheck` · `lint` · `seed` · `record` · `eval` · `db:generate` · `db:migrate` · `verify:replay`
+
+`record` spends real API quota — always `npm run record -- --dry-run` first. The
+free tier caps `generate_content` at **20 requests/day/model**, so treat quota
+as the scarce resource it is ([ADR 0001](./docs/adr/0001-llm-provider.md)).
 
 - Folder structure per [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md#components).
 - **Vitest** for tests.

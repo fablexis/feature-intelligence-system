@@ -222,7 +222,9 @@ describe('secrets and model ids', () => {
       for (const e of readdirSync(dir, { withFileTypes: true })) {
         const p = `${dir}/${e.name}`;
         if (e.isDirectory()) walk(p);
-        else if (/\.tsx?$/.test(e.name)) files.push(p);
+        // Test files are exempt: asserting on a real error message requires
+        // the literal model id that produced it.
+        else if (/\.tsx?$/.test(e.name) && !/\.test\.tsx?$/.test(e.name)) files.push(p);
       }
     };
     walk('./src');

@@ -47,7 +47,7 @@ Three non-obvious reasons:
 
 - [x] `AiProvider` interface: `extractProblem`, `embed`, `adjudicate`, `estimateFactors`
 - [x] Gemini implementation uses `generateObject` with Zod schemas for every non-embedding call
-- [ ] `npm run record` populates `fixtures/` for the whole seed corpus + scripted demo request — **blocked on go-ahead**; dry run verified at 60 API calls
+- [x] `npm run record` populates `fixtures/` for the whole seed corpus + scripted demo request — 56 extractions + 56 embeddings; `npm run verify:replay` confirms **56/56 real, 0 degraded, deterministic**
 - [x] Replay provider resolves a recorded input by hash and returns the identical object twice in a row
 - [x] Unrecorded input falls back to n-grams and sets `degraded: true`
 - [x] Every call writes one `ai_decisions` row with stage, model ID, latency and token usage
@@ -55,7 +55,17 @@ Three non-obvious reasons:
 - [x] **Record script is quota-safe:** throttled, retries 429/5xx with exponential backoff, and **resumable** — re-running skips inputs already recorded by hash
 - [x] **`--dry-run` prints the expected call count per stage** before any quota is spent
 
-**Actual:** ~8 min so far (est. 35) · **Status:** In progress — code complete and verified on the replay path; awaiting go-ahead to record fixtures · **Deviation:**
+**Actual:** ~52 min (est. 35) · **Status:** Done · **Deviation:**
+- **Overran the estimate by ~17 min, almost entirely on quota archaeology.** The code was done in ~8 min; the rest was discovering the free tier's real shape and fixing what that exposed. Worth the overrun — the findings reshaped ADR 0001, ADR 0002 and the C3/C5 budget.
+- **The free tier caps `generate_content` at 20 requests/day/model** (measured — the error stated the number), not per minute. `gemini-3.8-flash` was exhausted after 7 extractions with a 19h21m retry-after. Full account in the [ADR 0001 amendment](./adr/0001-llm-provider.md). Fast tier moved to `gemini-3.1-flash-lite`, probed before committing; it then served 57 calls without a cut-off.
+- **Nested retries were a quota amplifier.** The AI SDK retries internally (3 attempts) and the record loop retried on top (4) — up to 12 real calls per logical call, which is how 7 extractions burned a 20-call budget. SDK retries disabled at all four call sites; retrying lives in one place.
+- **A quota 429 was misclassified as transient.** `src/ai/errors.ts` now classifies on the **retry-after duration, not the status code** — the useful question is whether it clears in seconds or hours — and aborts above 120s instead of backing off pointlessly.
+- **Two bugs the verification caught, which is the point of having it.** (1) The embed phase derived its work from *this run's* extractions, so a run that died before embedding left 22 extractions permanently unembedded; it now derives from the whole fixture store and is correct across resumes. (2) `verify-replay.ts` passed an extra `id` field into `extractProblem`, changing the input hash and reporting 0/56 instead of 34/56 — my bug in the verifier, not the pipeline.
+- **Per-stage models added** (`GEMINI_MODEL_ADJUDICATE`, `GEMINI_MODEL_SCORE`) so no two `generate_content` stages share a daily cap. `renderBudget()` **verifies** that isolation rather than asserting it — and immediately caught both stages falling back to `MODEL_STRONG`.
+- **My dry-run time estimate was wrong by ~7×**: it counted throttle gaps only, while real calls take 19–23s and latency dominates. Now reports both components.
+- **Measured finding that changes a design decision:** duplicates and adjacent problems **overlap in cosine space** (worst duplicate 0.741 < best non-duplicate 0.772). No similarity threshold separates them, so problem formation cannot be threshold-driven — see [eval-results](./eval-results.md) and the [ADR 0002 amendment](./adr/0002-two-stage-dedupe.md).
+- `generateObject` is deprecated in AI SDK 7 in favour of `generateText` with an output setting. Left as-is since C2's criteria name it; flagged for [E3](#e3--review--hardening).
+- Fixtures are 608 KB (`outputs.json`) — comfortable for git at 768 dims.
 - **Adjudication and factor fixtures cannot be recorded yet — confirmed, not assumed.** Adjudication's input is `(draft, retrieved candidates)`, and which candidates exist depends on which problems have been formed by the time each request arrives — i.e. on ingest order and on prior merge decisions, which need C3's pipeline and C7's thresholds. `estimateFactors` likewise needs formed problems with evidence sets. So this task records **extract + embed** (the two stateless stages), and `fixtures/manifest.json` carries a `pending` block naming both deferred stages and why. Record them immediately after C3.
 - **Embedding space is now a first-class type.** n-gram and Gemini vectors are not merely different in quality — cosine between them is **meaningless**, because they share no geometry. So `EmbedOutput` carries `space: 'gemini' | 'ngram'`, `problems.embedding_model` persists it, and **C3's retrieval must compare only within one space**. Without this the degraded path would return confident nonsense instead of honest misses.
 - **`EMBED_DIM` 768, not 3072**, requested via `outputDimensionality`. A quarter the fixture bytes, ample discrimination at a 12-problem scale, and embeddings are stored rounded to 6dp — far below cosine's sensitivity.
@@ -78,8 +88,62 @@ Three non-obvious reasons:
 - [ ] Each stage's fallback is exercised by a forced-failure test; resolution never merges on failure
 - [ ] UI shows stage-by-stage progress, not one spinner
 - [ ] `body_raw` is stored verbatim and rendered escaped
+- [ ] **Adjudication is skipped when no candidate clears the recall floor** — no model call when the answer is already known (first request of a problem); the skip is recorded as a `dedupe_suggestions` row with no verdict, so M1 still sees it
+- [ ] Retrieval compares **only within one embedding space** ([C2](#c2--provider-abstraction--recordreplay--35-min)); a `gemini` query vector is never cosined against an `ngram` one
+- [ ] `npm run record` gains `--stage=adjudicate` so one stage can be recorded without touching another's quota
+- [ ] Adjudication fixtures recorded after ingest, within the budget below
 
 **Actual:** · **Status:** Todo · **Deviation:**
+
+### Recording budget (C3 + C5)
+
+Quota is the scarce resource in this build — not time, not money. The free tier
+caps `generate_content` at a small number of requests **per day, per model**
+(20/day measured; [ADR 0001 amendment](./adr/0001-llm-provider.md)). Printed by
+`npm run record -- --dry-run`, computed in `src/ai/budget.ts`:
+
+| stage | model | expected calls | daily cap | basis |
+|---|---|---|---|---|
+| extract | `gemini-3.1-flash-lite` | 56 *(done)* | ≥57/day | **measured lower bound** — 57 served today without a cut-off |
+| embed | `gemini-embedding-001` | 4 *(done)* | separate metric | unknown — `embed_content` is not the `generate_content` bucket |
+| adjudicate | `gemini-3.5-flash-lite` | ~44 | unknown | probe-confirmed available |
+| factors | `gemini-3.8-flash` | 3 | 20/day | **measured** — the error stated the number |
+
+Three levers, in order of leverage:
+
+1. **Don't call when the answer is known.** The first request of each problem
+   has nothing above the recall floor to compare against, so adjudication is
+   skipped: 56 → ~44 calls. The skip is still logged, so M1's denominator stays
+   honest.
+2. **Batch only where batching cannot corrupt what we measure.** Factor scoring
+   batches 4 problems per call (12 → 3). Safe because the eval measures
+   *dedupe*, not scores. **Extraction is deliberately NOT batched** for the
+   opposite reason: a model seeing several requests at once could normalise
+   their statements toward each other, manufacturing the very similarity the
+   dedupe eval exists to measure. That would invalidate the thesis test, so the
+   56 independent calls stand.
+3. **One bucket per stage.** `GEMINI_MODEL_ADJUDICATE` and
+   `GEMINI_MODEL_SCORE` split the old single strong tier, so no two
+   `generate_content` stages compete for one cap. `renderBudget()` **verifies**
+   this rather than claiming it, and warns when two stages collide — which it
+   caught immediately, since both initially fell back to `MODEL_STRONG`.
+
+Caps are labelled by how they were learned: **measured** (an error stated the
+number), **lower bound** (N calls served without a cut-off), or **unknown**.
+Nothing is inferred from documentation, which does not publish them.
+
+**Residual risk:** `gemini-3.5-flash-lite`'s cap is unknown, and adjudication is
+the largest consumer at ~44 calls. If its cap is also 20, recording stalls
+mid-way — which is survivable, because fixtures checkpoint per call and a
+re-run resumes. Fallback order if it stalls: wait for the daily reset, or move
+adjudication to whichever bucket has measured headroom. Recording across two
+days is acceptable; fixtures are committed.
+
+**Batching caveat to record now:** batched factor scores are mildly
+batch-influenced — the model sees four problems at once. For a *ranking* task
+that is arguably desirable, but it must be deterministic, so batch composition
+is fixed by sorting on problem id, and fixtures stay keyed **per problem** (not
+per batch) so adding a 13th problem does not invalidate the other twelve.
 
 ### C4 — Problem detail · 20 min
 **Goal:** a problem is legible as accumulated evidence, not as an abstraction.
@@ -103,6 +167,8 @@ Three non-obvious reasons:
 - [ ] Score arithmetic is deterministic — same factors in, same band out, no model call
 - [ ] Band override requires a reason and writes a `human_overrides` row
 - [ ] Each score writes an append-only `score_runs` row; re-scoring never overwrites
+- [ ] **Factor scoring batches 4 problems per call** with composition fixed by sorted problem id, and **fixtures keyed per problem** so a new problem does not invalidate the rest — per the [recording budget](#recording-budget-c3--c5)
+- [ ] Scores run on `GEMINI_MODEL_SCORE`, not the adjudication model, so the two stages cannot exhaust one cap
 
 **Actual:** · **Status:** Todo · **Deviation:**
 

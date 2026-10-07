@@ -8,6 +8,14 @@ export const aiConfig = () => ({
   modelFast: process.env.GEMINI_MODEL_FAST ?? '',
   modelStrong: process.env.GEMINI_MODEL_STRONG ?? '',
   modelEmbed: process.env.GEMINI_MODEL_EMBED ?? '',
+  /**
+   * Adjudication and scoring are split off the strong tier so each stage can
+   * sit in its own daily quota bucket — one 20/day cap must not be able to
+   * stall two stages (ADR 0001 amendment). Both default to the strong tier, so
+   * leaving them unset changes nothing.
+   */
+  modelAdjudicate: process.env.GEMINI_MODEL_ADJUDICATE || process.env.GEMINI_MODEL_STRONG || '',
+  modelScore: process.env.GEMINI_MODEL_SCORE || process.env.GEMINI_MODEL_STRONG || '',
   embedDim: Number(process.env.EMBED_DIM ?? 768),
   /** Conservative by default: the free-tier limits are not published. */
   recordRpm: Number(process.env.RECORD_RPM ?? 20),

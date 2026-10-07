@@ -1,0 +1,23 @@
+{
+  "recordedAt": "2026-10-07T05:11:04.085Z",
+  "models": {
+    "fast": "gemini-3.1-flash-lite",
+    "strong": "gemini-3.8-flash",
+    "embed": "gemini-embedding-001"
+  },
+  "embedDim": 768,
+  "promptVersions": {
+    "extract": "v1-e3d0a802",
+    "adjudicate": "v1-b492db6f",
+    "factors": "v1-164ff986",
+    "embed": "embed-v1"
+  },
+  "counts": {
+    "extract": 56,
+    "embed": 56
+  },
+  "pending": {
+    "adjudicate": "inputs depend on which problems exist when each request arrives — record after C3",
+    "score": "needs formed problems and their evidence sets — record after C3, used by C5"
+  }
+}
