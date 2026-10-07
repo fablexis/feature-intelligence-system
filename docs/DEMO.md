@@ -37,39 +37,56 @@ frustrated ("our auditors rejected the evidence pack").
 
 ---
 
-## Beat 1 — The corpus is not 55 asks, it's 12 problems
+## Beat 1 — The corpus is not 55 asks, it's a set of shared problems
 
-Open the problem list. Twelve problems, each backed by the verbatim requests
+Open the problem list. **23 problems**, each backed by the verbatim requests
 that formed it. Nobody labelled these: the pipeline read 55 pieces of raw text
 and grouped them.
 
-Point at **"Finance must re-enter Ledgerline figures into the system of record
-by hand"** and expand its evidence. Seven requests, in seven different
-vocabularies, from a CSM note to a prospect's blocking requirement. A keyword
+Say the honest number out loud: the ground truth is **12**, so the pipeline
+still over-splits. Measured recall is 0.466 ([eval-results](./eval-results.md)),
+and the gap is visible in Beat 2.
+
+Point at **"cannot automatically transfer billing data from the
+revenue-operations platform to their accounting general ledger"** and expand its
+evidence. Five requests from four accounts in four different vocabularies — a
+CSM note, a customer writing in, a support ticket, an internal note. A keyword
 search for "CSV" finds one of them.
 
 ---
 
 ## Beat 2 — Popularity and value point in opposite directions
 
-This is the contrast the product exists to surface. Two problems, side by side:
+This is the contrast the product exists to surface. Two problems, side by side,
+**as the pipeline actually formed them**:
 
-| | Notification scoping | EU data residency |
+| | Notification scoping *(largest of 4 fragments)* | EU data residency |
 |---|---|---|
-| Requests | **9** | 3 |
-| Distinct accounts | **9** — the widest in the corpus | 3 |
-| Combined ARR | $150,000 | **$1,570,000** |
+| Requests | 4 | 3 |
+| Distinct accounts | 4 | 3 |
+| Combined ARR | $79,000 | **$1,570,000** |
 | Segments | all SMB | all enterprise |
 | Strategy goals hit | none | enterprise readiness |
 | Renewal risk in the text | none | two renewals, one explicit "€410k at risk" |
 
-On a vote count, notification scoping wins nine to three and goes on the
-roadmap. It is a real problem — nine customers independently complained, two
-muted alerts entirely — but it is nine small accounts asking for a filter.
+**20× the ARR on fewer voices, and the only one of the two that moves a company
+goal.** That is the trade the ranking has to get right.
+
+### Say this part out loud, because a reviewer will find it
+
+Nine customers raised notification scoping. The pipeline currently splits them
+across **four** problems (4 + 2 + 2 + 1 accounts) instead of one — so it
+*understates* that problem's reach. That is signal fragmentation: precisely the
+failure this product exists to fix, visible in its own output.
+
+It is a measured recall gap, not a mystery: 8 of 11 planted duplicate pairs are
+caught, and the three misses include this cluster. It is also the honest reason
+the demo is stronger on *precision* than on *recall* — zero false merges
+anywhere a human would not have been asked, but duplicates still slipping
+through as separate problems.
 
 Data residency is three voices. One is Legal blocking a contract expansion,
-one is procurement gating a renewal, one is a CISO in a security review. Ten
-times the ARR and the only one of the two that moves a company goal.
+one is procurement gating a renewal, one is a CISO in a security review.
 
 **The ranking should put data residency above notification scoping, and show
 you why.** Expand the factor decomposition: `customer_value` cites the three
