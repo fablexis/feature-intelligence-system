@@ -9,7 +9,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { createEvalDb } from './db';
+import { createMemoryDb } from '../db/memory';
 import { insertCorpus } from '../seed/corpus';
 import { TABLE_NAMES, sql } from '../db/schema';
 
@@ -35,18 +35,18 @@ describe('npm run eval cannot reach the network', () => {
 
 describe('npm run eval cannot disturb the demo database', () => {
   it('does not open the default connection', () => {
-    expect(script).not.toMatch(/createDb|DB_PATH|from '\.\.\/src\/db\/index'/);
-    expect(script).toMatch(/createEvalDb/);
+    expect(script).not.toMatch(/createDb\b|DB_PATH|from '\.\.\/src\/db\/index'/);
+    expect(script).toMatch(/createMemoryDb/);
   });
 
   it('builds its database in memory', () => {
-    expect(readFileSync('./src/eval/db.ts', 'utf8')).toContain("':memory:'");
+    expect(readFileSync('./src/db/memory.ts', 'utf8')).toContain("':memory:'");
   });
 });
 
 describe('the ephemeral database', () => {
   it('migrates to the full schema and takes the corpus', () => {
-    const db = createEvalDb();
+    const db = createMemoryDb();
     const names = db.all<{ name: string }>(
       sql.raw(
         "select name from sqlite_master where type='table' and name not like 'sqlite_%' and name not like '__drizzle%'",
@@ -61,7 +61,7 @@ describe('the ephemeral database', () => {
   });
 
   it('starts with no problems, so the eval can never be handed its answers', () => {
-    const db = createEvalDb();
+    const db = createMemoryDb();
     insertCorpus(db);
     expect(db.get<{ n: number }>(sql.raw('select count(*) as n from problems'))?.n).toBe(0);
   });

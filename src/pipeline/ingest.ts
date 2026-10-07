@@ -10,6 +10,7 @@ import {
   problems,
   requests,
   scoreRuns,
+  supports,
 } from '../db/schema';
 import { type Candidate, retrieveCandidates } from './retrieval';
 import { type Resolution, resolve } from './resolve';
@@ -244,20 +245,35 @@ function linkRelated(db: Db, a: string, b: string) {
 }
 
 /**
- * Clears everything the pipeline derives, leaving the seeded corpus intact.
+ * Clears everything that hangs off a pipeline-formed problem, leaving the
+ * seeded corpus intact. Returns what it discarded that a human had created, so
+ * the caller can say so rather than losing it quietly.
  *
  * Ingest rebuilds rather than resuming because formation is order-dependent: a
  * partial re-ingest would form problems against a half-built corpus and
  * produce a different, non-reproducible result.
+ *
+ * **`supports` has to go too, and that is a real loss worth naming.** A support
+ * row is a human's vote, not pipeline output — but it references a problem the
+ * pipeline formed, so leaving it would fail the foreign key on the `problems`
+ * delete and make `npm run ingest` unrunnable the moment anyone clicks "this
+ * affects us too". Carrying it forward is worse than deleting it: the problem
+ * set is being rebuilt, so a row would end up pointing at a problem that may
+ * never be re-formed, or at a different grouping than the one the person
+ * actually voted on. Re-pointing someone's vote without asking is the error
+ * this whole product exists to avoid.
  */
-export function resetDerived(db: Db) {
+export function resetDerived(db: Db): { discardedSupports: number } {
+  const discardedSupports = db.select({ id: supports.id }).from(supports).all().length;
   db.delete(scoreRuns).run();
   db.delete(dedupeSuggestions).run();
   db.delete(problemLinks).run();
+  db.delete(supports).run();
   db.delete(evidenceLinks).run();
   db.delete(problems).run();
   db.update(requests)
     .set({ resolution: null, triagedAt: null, degraded: false })
     .where(sql`1 = 1`)
     .run();
+  return { discardedSupports };
 }

@@ -5,11 +5,11 @@ import { TABLE_NAMES } from '@/db/schema';
 
 const TASKS = [
   { id: 'C1', name: 'Project skeleton', done: true },
-  { id: 'C6', name: 'Seed corpus with labels', done: false },
-  { id: 'C2', name: 'Provider abstraction + record/replay', done: false },
-  { id: 'C3', name: 'Intake pipeline + three-way resolution', done: false },
-  { id: 'C7', name: 'Eval harness', done: false },
-  { id: 'C4', name: 'Problem detail', done: false },
+  { id: 'C6', name: 'Seed corpus with labels', done: true },
+  { id: 'C2', name: 'Provider abstraction + record/replay', done: true },
+  { id: 'C3', name: 'Intake pipeline + three-way resolution', done: true },
+  { id: 'C7', name: 'Eval harness', done: true },
+  { id: 'C4', name: 'Problem detail', done: true },
   { id: 'C5', name: 'Explainable priority', done: false },
   { id: 'C8', name: 'Instrumentation + README', done: false },
 ];
@@ -41,8 +41,14 @@ export default function Home() {
 
       <div className="mt-6 flex gap-2">
         <Link
-          href="/intake"
+          href="/problems"
           className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium"
+        >
+          Browse problems
+        </Link>
+        <Link
+          href="/intake"
+          className="hover:bg-muted inline-flex h-9 items-center rounded-md border px-4 text-sm font-medium"
         >
           Submit a request
         </Link>

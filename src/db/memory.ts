@@ -1,12 +1,12 @@
 /**
  * A migrated, empty database that exists only for the duration of one process.
  *
- * The eval harness must not touch `data/fis.db`. Measuring is a read-shaped
- * act, but the pipeline is not: forming problems writes, and `resetDerived`
- * deletes — so running the eval against the demo database would quietly
- * discard any human action a reviewer had taken in the UI. A measurement that
- * mutates its subject is also simply a worse measurement: this way the run is
- * reproducible from `src/seed` + `fixtures/` and nothing else.
+ * Two callers, for the same reason: the eval harness must not touch
+ * `data/fis.db` (measuring is read-shaped, but the pipeline writes and
+ * `resetDerived` deletes, so running it against the demo database would discard
+ * human actions a reviewer had taken), and tests want a real schema without a
+ * file on disk. A measurement or a test that mutates its subject is a worse
+ * measurement or test.
  *
  * `src/db/index` is deliberately not imported for its connection helpers: that
  * module opens a process-wide handle to the demo database as a side effect of
@@ -16,12 +16,12 @@
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
-import type { Db } from '../db/index';
-import { schema } from '../db/schema';
+import type { Db } from './index';
+import { schema } from './schema';
 
 export const MIGRATIONS_FOLDER = './drizzle';
 
-export function createEvalDb(migrationsFolder = MIGRATIONS_FOLDER): Db {
+export function createMemoryDb(migrationsFolder = MIGRATIONS_FOLDER): Db {
   const sqlite = new Database(':memory:');
   // Off by default in SQLite, and the schema's references are load-bearing.
   sqlite.pragma('foreign_keys = ON');

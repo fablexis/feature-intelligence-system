@@ -23,7 +23,7 @@ import { asc } from 'drizzle-orm';
 import { loadManifest } from '../src/ai/fixtures';
 import { prompt, EMBED_PROMPT_VERSION } from '../src/ai/prompts';
 import { createReplayProvider } from '../src/ai/replay';
-import { createEvalDb } from '../src/eval/db';
+import { createMemoryDb } from '../src/db/memory';
 import { V1_RUN } from '../src/eval/history';
 import { pairwise } from '../src/eval/pairwise';
 import { type ReportData, renderConsole, renderReport, spliceGenerated } from '../src/eval/report';
@@ -87,7 +87,7 @@ async function main() {
     basis: String(thresholds.tAutoBasis ?? '(no basis recorded)'),
   };
 
-  const db = createEvalDb();
+  const db = createMemoryDb();
   insertCorpus(db);
 
   const provider = createReplayProvider();

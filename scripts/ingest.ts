@@ -70,7 +70,12 @@ async function main() {
   const provider = withDecisionLog(base, db, () => ({ requestId: currentRequestId }));
 
   console.log(`ingesting ${corpus.length} requests with ${base.name} (T_auto ${thresholds.tAuto})\n`);
-  resetDerived(db);
+  const { discardedSupports } = resetDerived(db);
+  if (discardedSupports > 0) {
+    // A human's votes, deleted because the problems they point at are about to
+    // be rebuilt. Said out loud rather than swallowed.
+    console.log(`  discarded ${discardedSupports} "this affects us too" row(s) — see resetDerived\n`);
+  }
 
   let attached = 0;
   let created = 0;
