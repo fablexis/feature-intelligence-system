@@ -16,15 +16,31 @@
 import { renderBudget } from '../src/ai/budget';
 import { canonicalText } from '../src/ai/canonical';
 import { aiConfig, requireGeminiConfig } from '../src/ai/config';
-import { MAX_WAIT_MS, classify, describeExhausted } from '../src/ai/errors';
 import { type FixtureEntry, loadFixtures, round6, saveFixtures, saveManifest } from '../src/ai/fixtures';
 import { createGeminiProvider } from '../src/ai/gemini';
 import { fixtureKey } from '../src/ai/hash';
 import { EMBED_PROMPT_VERSION, prompt } from '../src/ai/prompts';
+import { QuotaExhausted, sleep, withRetry } from '../src/ai/retry';
 import { ProblemDraftSchema } from '../src/ai/schemas';
 import { DEMO_REQUEST, SEED_REQUESTS } from '../src/seed/requests';
 
 const dryRun = process.argv.includes('--dry-run');
+/**
+ * Record one stage without touching another's quota bucket.
+ *
+ * Note which stages live here: `extract` and `embed` are stateless, so they
+ * can be enumerated up front. `adjudicate` and `score` depend on pipeline
+ * state and are recorded by `npm run ingest` and C5's scorer respectively —
+ * see docs/TASKS.md#c2.
+ */
+const STAGES = ['extract', 'embed'] as const;
+const stageArg = process.argv.find((a) => a.startsWith('--stage='))?.split('=')[1];
+if (stageArg && !STAGES.includes(stageArg as (typeof STAGES)[number])) {
+  console.error(`--stage must be one of: ${STAGES.join(', ')}`);
+  console.error('adjudicate is recorded by `npm run ingest`; score by C5.');
+  process.exit(1);
+}
+const wants = (stage: (typeof STAGES)[number]) => !stageArg || stageArg === stage;
 const cfg = aiConfig();
 
 type ExtractJob = { title: string; bodyRaw: string; source: ExtractSource; id: string };
@@ -49,7 +65,9 @@ const extractKey = (j: ExtractJob) =>
 const embedKey = (text: string) =>
   fixtureKey({ stage: 'embed', modelId: cfg.modelEmbed, promptVersion: EMBED_PROMPT_VERSION, input: text });
 
-const pendingExtract = extractJobs.filter((j) => !fixtures.has(extractKey(j)));
+const pendingExtract = wants('extract')
+  ? extractJobs.filter((j) => !fixtures.has(extractKey(j)))
+  : [];
 
 /**
  * Every recorded extraction whose canonical text has no embedding yet.
@@ -76,7 +94,7 @@ if (dryRun) {
   const recordedExtract = extractJobs.length - pendingExtract.length;
   // Counted from the fixture store, so a resumed run reports the real backlog
   // including extractions recorded by an earlier run that died before embedding.
-  const embedTexts = missingEmbeddings().length + pendingExtract.length;
+  const embedTexts = wants('embed') ? missingEmbeddings().length + pendingExtract.length : 0;
   const apiCalls = pendingExtract.length + embedBatches(embedTexts);
 
   console.log('DRY RUN — no API calls made, no quota spent\n');
@@ -108,31 +126,7 @@ if (dryRun) {
 
 // ─── record ─────────────────────────────────────────────────────────────────
 
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const minGapMs = Math.ceil(60_000 / Math.max(cfg.recordRpm, 1));
-
-class QuotaExhausted extends Error {}
-
-/**
- * Retries transient failures; **refuses to retry an exhausted daily quota**,
- * because its retry-after is measured in hours and backing off against it only
- * burns wall-clock before failing anyway.
- */
-async function withRetry<T>(label: string, fn: () => Promise<T>, attempt = 1): Promise<T> {
-  try {
-    return await fn();
-  } catch (err) {
-    const c = classify(err);
-    if (c.kind === 'exhausted') throw new QuotaExhausted(describeExhausted(c));
-    if (c.kind === 'fatal' || attempt >= 5) throw err;
-    const backoff = Math.min(c.waitMs ?? 2 ** attempt * 1000, MAX_WAIT_MS) + Math.random() * 500;
-    console.warn(
-      `  ${label}: ${c.status || 'transport'} — retry ${attempt}/4 in ${Math.round(backoff)}ms`,
-    );
-    await sleep(backoff);
-    return withRetry(label, fn, attempt + 1);
-  }
-}
 
 const put = (entry: FixtureEntry) => {
   fixtures.set(entry.key, entry);
@@ -157,7 +151,7 @@ async function main() {
   // Embed work is derived from the WHOLE fixture store, not from this run's
   // extractions. Deriving it from the run under-records on resume: a run that
   // dies before the embed phase leaves its extractions permanently unembedded.
-  const statements = missingEmbeddings();
+  const statements = wants('embed') ? missingEmbeddings() : [];
 
   console.log(`\nembedding ${statements.length} statement(s) in ${embedBatches(statements.length)} batch(es)\n`);
 

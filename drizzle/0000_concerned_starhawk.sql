@@ -51,6 +51,7 @@ CREATE TABLE `evidence_links` (
 	`confidence` real,
 	`suggestion_id` text,
 	`active` integer DEFAULT true NOT NULL,
+	`needs_review` integer DEFAULT false NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`request_id`) REFERENCES `requests`(`id`) ON UPDATE no action ON DELETE no action,
 	FOREIGN KEY (`problem_id`) REFERENCES `problems`(`id`) ON UPDATE no action ON DELETE no action

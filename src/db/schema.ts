@@ -105,6 +105,12 @@ export const evidenceLinks = sqliteTable(
     confidence: real('confidence'),
     suggestionId: text('suggestion_id'),
     active: integer('active', { mode: 'boolean' }).notNull().default(true),
+    /**
+     * Attached, but below `T_auto` — so a PM still has to confirm it. Stored
+     * rather than derived from `confidence < T_auto`, because T_auto changes
+     * when the eval re-runs and history must not change with it.
+     */
+    needsReview: integer('needs_review', { mode: 'boolean' }).notNull().default(false),
     createdAt: createdAt(),
   },
   (t) => [

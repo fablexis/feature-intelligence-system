@@ -36,7 +36,10 @@ cosine separates a correct match from a different problem.
 Mean **0.812**, min **0.741**. Paraphrase matching across disjoint vocabulary
 works, which is the capability the whole project rests on.
 
-### The finding that matters: cosine alone cannot decide identity
+### The measured reason adjudication exists
+
+This is the evidence for the two-stage design, and the single most load-bearing
+number in the project: **cosine alone cannot decide identity.**
 
 | set | n | mean | extreme |
 |---|---|---|---|
@@ -59,8 +62,69 @@ because on this data no such threshold exists.
 
 ---
 
-## Pending — dedupe precision/recall sweep (C7)
+## 2026-10-07 — Canonical ingest pass (C3)
 
-Requires C3's pipeline. Will record here: the chosen `T_auto`, the
-precision/recall curve it came from, stage-1 recall measured separately from
-end-to-end precision, and the sweep's documented approximations.
+**Basis:** 55 requests through the full pipeline, 52 live adjudication calls,
+`T_auto` 0.8 (placeholder). Scored **pairwise** against the labels: for each
+pair of requests, did the pipeline group them, and should it have?
+
+| band | precision | recall | tp / fp / fn |
+|---|---|---|---|
+| all bands | 0.974 | 0.319 | 37 / 1 / 79 |
+| **auto band only** | **1.000** | 0.233 | 24 / 0 / 79 |
+
+**Replay reproduces the pass exactly** — 31 problems, 24 attached, 8 flagged,
+0 degraded, zero API calls. That determinism is what makes a confirming pass
+free.
+
+### Against the pre-registered targets
+
+- **Precision ≥ 0.90 — met, and then some.** 1.000 in the auto band: *zero*
+  false merges where no human would have been asked. The single false merge in
+  the corpus (`r03a/r09a`, approval controls vs. approve-from-email) landed in
+  the **flagged** band, which is the band existing to catch exactly that.
+- **Recall ≥ 0.60 — missed badly, at 0.319.** 31 problems formed where ground
+  truth is 12. Six of eleven planted disjoint pairs were caught, including the
+  hardest one (`r06a/r06b` at cosine 0.741, *below* the best non-duplicate —
+  cosine alone could never have found it).
+
+### Diagnosed cause: two clauses in the adjudication prompt
+
+All five missed pairs returned **`related` at confidence 0.85** — not
+`distinct`. The model recognised the shared problem and then split on *scope*:
+
+> "both deal with tracking document changes, but `prob-req-r02a` addresses user
+> attribution whereas the new problem concerns a broader immutable audit trail"
+
+That is one problem described at two zoom levels, which the extraction prompt's
+abstraction-level rule was supposed to normalise. Across 991 judgements:
+**895 `distinct`, 72 `related`, 24 `same`.**
+
+Two clauses in `prompts/adjudicate.md` produced it:
+
+1. *"when you are genuinely torn between `same` and `related`, answer
+   `related`"* — followed faithfully, and 0.85 confidence shows the model
+   wasn't torn at all; it was confidently choosing `related`.
+2. The `related` definition permits *"same cause, different scope"*. **"Scope"
+   is the loophole**: every paraphrase pair differs in scope at some level of
+   description, so the clause licenses splitting genuine duplicates.
+
+The existing counter-test — *"would one change ship for both?"* — is present in
+the prompt but overridden by clause 1.
+
+**Lever and its cost:** recall here is *not* recoverable by C7's sweep. Under
+formation-by-verdict, `T_auto` moves items between the auto and flagged bands
+but never changes formation, so recall is frozen by the recorded verdicts. This
+is the flip side of the exactness that design bought: the sweep trades
+auto-precision against review load, and nothing else. Improving recall means
+editing the prompt, which changes its content hash and invalidates all 52
+adjudication fixtures.
+
+---
+
+## Pending — threshold sweep (C7)
+
+Will record here: the chosen `T_auto`, the precision/recall curve it came from,
+and the sweep's one remaining approximation (verdicts were produced with all
+candidates visible, so a production top-*k* would be slightly off-context —
+see [ADR 0003](./adr/0003-brute-force-cosine.md)'s breadth trigger).

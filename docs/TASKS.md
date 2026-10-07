@@ -79,21 +79,30 @@ Three non-obvious reasons:
 **Goal:** the centerpiece. Submit → extract → embed → retrieve → adjudicate → resolve, in one interaction.
 **Depends on:** C2 · **ADR:** [0002](./adr/0002-two-stage-dedupe.md), [0005](./adr/0005-duplicate-resolution-actor.md)
 
-- [ ] Stages 1–5 run in order with per-stage timing recorded
-- [ ] **A planted near-duplicate in disjoint vocabulary is matched to its problem** (the one case that must pass)
-- [ ] Each of the three outcomes is reachable: auto-attach, ask-human, create-new
-- [ ] `related` is stored in `problem_links`, distinct from an evidence attach
-- [ ] "Actually, mine is different" creates a new problem and records the disagreement
-- [ ] Every suggestion writes a `dedupe_suggestions` row **including rejected ones**
-- [ ] Each stage's fallback is exercised by a forced-failure test; resolution never merges on failure
-- [ ] UI shows stage-by-stage progress, not one spinner
-- [ ] `body_raw` is stored verbatim and rendered escaped
-- [ ] **Adjudication is skipped when no candidate clears the recall floor** — no model call when the answer is already known (first request of a problem); the skip is recorded as a `dedupe_suggestions` row with no verdict, so M1 still sees it
-- [ ] Retrieval compares **only within one embedding space** ([C2](#c2--provider-abstraction--recordreplay--35-min)); a `gemini` query vector is never cosined against an `ngram` one
-- [ ] `npm run record` gains `--stage=adjudicate` so one stage can be recorded without touching another's quota
-- [ ] Adjudication fixtures recorded after ingest, within the budget below
+- [x] Stages 1–5 run in order with per-stage timing recorded
+- [x] **A planted near-duplicate in disjoint vocabulary is matched to its problem** — 6 of 11, including the hardest (`r06a/r06b`, cosine 0.741, *below* the best non-duplicate, so unreachable by cosine alone)
+- [x] Each of the three outcomes is reachable: auto-attach (16), ask-human (8), create-new (31) — all observed in the live pass
+- [x] `related` is stored in `problem_links`, distinct from an evidence attach
+- [x] "Actually, mine is different" creates a new problem and records the disagreement — `POST /api/intake/split`, deactivates rather than deletes, writes `human_overrides` + `rejected` on the suggestion
+- [x] Every suggestion writes a `dedupe_suggestions` row **including rejected ones** — 991 tuples stored
+- [x] Each stage's fallback is exercised by a forced-failure test; resolution never merges on failure — 8 tests in `fallback.test.ts`
+- [x] UI shows stage-by-stage progress, not one spinner — NDJSON stream, each stage rendered on arrival
+- [x] `body_raw` is stored verbatim and rendered escaped
+- [x] **Adjudication is skipped when no candidate clears the recall floor** — see Deviation: with no similarity floor, only the first request qualifies, so the saving is 1 call rather than 12
+- [x] Retrieval compares **only within one embedding space** ([C2](#c2--provider-abstraction--recordreplay--35-min)) — 6 dedicated tests
+- [x] `npm run record` gains `--stage` — see Deviation: adjudication is recorded by `ingest`, not `record`, so `--stage` covers extract/embed and rejects `adjudicate` with a pointer to the right command
+- [x] Adjudication fixtures recorded — 52 calls, replay reproduces the pass with 0 degraded
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Actual:** ~70 min (est. 40) · **Status:** Done · **Deviation:**
+- **Precision target met, recall target missed.** Pairwise against the labels: auto-band precision **1.000** (zero false merges where no human would be asked), all-band 0.974, but recall **0.319** against a pre-registered ≥0.60. 31 problems formed where ground truth is 12. Full numbers and the diagnosis in [eval-results](./eval-results.md).
+- **Cause is diagnosed, not guessed:** all five missed planted pairs returned `related` at confidence 0.85, splitting on *scope* ("broader", "specifically", "rather than"). Two clauses in `prompts/adjudicate.md` are responsible — the "when torn, answer `related`" tie-break, and `related`'s "same cause, different scope" definition, where **scope is a loophole** because every paraphrase differs in scope at some level of description.
+- **Recall is not recoverable by C7's sweep.** This is the flip side of formation-by-verdict that neither the plan nor I called out in advance: because `T_auto` only moves items between the auto and flagged bands, formation — and therefore recall — is frozen by the recorded verdicts. The sweep trades auto-precision against review load and nothing else. Fixing recall requires a prompt edit, which changes the prompt's content hash and invalidates all 52 adjudication fixtures. Held for a decision rather than silently re-spending quota.
+- **The recall-floor skip saves 1 call, not 12.** With `minSimilarity: 0` and all problems retrieved, only the genuinely empty corpus skips. The earlier ~44 estimate assumed a floor that the exact-sweep design removed; actual spend was 52.
+- **`--stage=adjudicate` does not belong on `record`.** Adjudication needs the pipeline, so `npm run ingest` records it. `record --stage` covers the two stateless stages and rejects `adjudicate` with a pointer to `ingest`.
+- **Problem ids are derived (`prob-<requestId>`), not generated.** An adjudication input embeds candidate problem ids, so random ids would change every fixture key on replay and miss 100% of recorded verdicts.
+- **`next build` caught two prerender bugs `next dev` did not.** Both DB-backed pages were being prerendered under Next 16's Cache Components, which would bake the account list and evidence at build time; both are now `instant = false`.
+- **Deduplicated the retry policy.** `record.ts` had its own copy of `withRetry`, defeating the point of the shared module created to stop the policy drifting between scripts.
+- Added `evidence_links.needs_review`, stored rather than derived from `confidence < T_auto`, because T_auto changes when the eval re-runs and history must not change with it.
 
 ### Recording budget (C3 + C5)
 

@@ -1,0 +1,8 @@
+{
+  "_comment": "T_auto is chosen by C7 from the precision/recall curve, never by hand. Until then this is an explicit placeholder, not a calibrated value.",
+  "tAuto": 0.8,
+  "tAutoBasis": "placeholder — pending C7 sweep",
+  "candidateLimit": "all",
+  "minSimilarity": 0,
+  "_candidateNote": "all problems, not top-k: removes the retrieval recall ceiling so C7's sweep is exact. See ADR 0003's breadth trigger for when this must change."
+}

@@ -147,3 +147,10 @@ Say these before a reviewer finds them:
 - **No support rows are seeded.** "Nine accounts" above means nine accounts
   that independently wrote in — evidence breadth, not clicks on a button. The
   one-click support action is live in the UI for a reviewer to use.
+- **No PM reviewed the seeded problem set.** The ingest pass ran with nobody
+  present, so an attach on a lower-confidence `same` verdict stands in for a
+  PM having confirmed it. A real PM could have rejected some of those, and the
+  problem set would then look different. Those attaches are marked
+  `needs_review`, so the flagged population is visible rather than hidden —
+  and the precision number quoted in Beat 4 covers only the **auto** band,
+  where no human would have been asked.

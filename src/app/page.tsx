@@ -1,5 +1,5 @@
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { TABLE_NAMES } from '@/db/schema';
 
@@ -39,9 +39,14 @@ export default function Home() {
         </CardContent>
       </Card>
 
-      <Button className="mt-6" disabled>
-        Submit a request — C3
-      </Button>
+      <div className="mt-6 flex gap-2">
+        <Link
+          href="/intake"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-9 items-center rounded-md px-4 text-sm font-medium"
+        >
+          Submit a request
+        </Link>
+      </div>
     </main>
   );
 }

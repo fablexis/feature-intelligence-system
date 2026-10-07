@@ -36,7 +36,24 @@ corpus**. A cut at 0.75 would merge "ledger re-entry" with "dimensional
 reporting" — a false merge — and still miss "SSO/SCIM" against "offboarding is
 a security risk".
 
-Two consequences, stronger than the original decision:
+### Assumption in the seeded ingest pass
+
+The canonical ingest pass runs with no human present, so **attaching on a
+below-`T_auto` `same` verdict stands in for a PM having confirmed it.** That is
+an assumption, not a result: a real PM reviewing those flagged attaches could
+have rejected some, which would have produced a different problem set and
+therefore different downstream adjudication inputs.
+
+Consequences worth being explicit about:
+
+- The seeded problem set is "what the adjudicator proposed", not "what a PM
+  approved". Every such attach is persisted with `needs_review = true`, so the
+  flagged population is countable rather than invisible.
+- **M1's headline precision is measured on the auto band only** (at or above
+  `T_auto`), where no human would have intervened. The flagged band is reported
+  separately as review load, not folded into the precision number.
+
+### Two consequences, stronger than the original decision
 
 1. Stage 2 is not an accuracy improvement, it is **load-bearing**. Embedding-
    only dedupe cannot be made correct by tuning.
