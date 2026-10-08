@@ -393,6 +393,41 @@ Priority order. None are in the 180-minute budget.
 
 **Actual:** ~70 min · **Status:** Done · **Deviation:** the skill's own `npx skills add tt-a1i/archify` timed out cloning at 300s; cloning manually (~50s) and installing from the local path worked. Most of the remaining time went to one measured constraint at a time — the Reader caps viewBox width by projected font size, caps height for the legend, and requires a ratio ≥ 1.55 before it will narrow a canvas, so the sequence had to satisfy three at once and lost a participant (`resolve`, a pure function the pipeline calls) to fit.
 
+
+### E6 — Redesign: "claro y vivo"
+**Goal:** the six demo screens match the approved Design System. **Skin and motion only** — no feature, route, data field or API change, per [PRODUCT Non-Goals](./PRODUCT.md#non-goals).
+**Depends on:** core complete, E1 · **Outside the appetite** · Branch `redesign`; `main` stays recordable until the merge is approved
+**Reference:** Design System artifact, version `1791429185-4f66`, exported to [`docs/design/reference/`](./design/reference) · Direction recorded in [DESIGN.md](./DESIGN.md)
+**Budget: ~340 min**, which is more than the entire 180-minute core build. Stated up front rather than discovered at the end.
+
+| # | Step | Budget | Commit |
+|---|---|---|---|
+| 0 | Reference into the repo + rewrite `DESIGN.md` | 25 min | `feat(E6): design reference and direction` |
+| 1 | Tokens and fonts | 35 min | `feat(E6): tokens and fonts` |
+| 2 | Shell — sidebar, icon rail, mobile tab bar, page header | 45 min | `feat(E6): app shell` |
+| 3 | Shared pieces — band, flag, measure, meter, provenance, buttons, inputs, segmented control, skeletons, toasts | 50 min | `feat(E6): shared pieces` |
+| 4 | Base motion — stagger, bars, lift, expand, reduced-motion | 25 min | `feat(E6): base motion` |
+| 5 | **The three Loom screens** — Review, New request, Priority | 90 min | `feat(E6): loom screens` |
+| 6 | Problems, Problem detail, Overview | 50 min | `feat(E6): remaining views` |
+| 7 | Mobile pass at 390px + empty/loading/not-found/error | 45 min | `feat(E6): mobile and states` |
+
+**Every step is pushed as soon as it is committed.** Sessions here have hit usage limits mid-task twice; progress that only exists locally does not survive that.
+
+- [x] **0 ·** 31 reference files under `docs/design/reference/`. `DESIGN.md` rewritten: records which E1 decisions are **superseded** and why, and keeps the three that still hold
+- [ ] **1 ·** `tokens.json` mapped into `globals.css` per `Implementacion.md`'s equivalence table, Day + Night through `prefers-color-scheme` with no toggle. Tailwind v4's `dark` custom variant redefined to the media query so every existing `dark:` utility keeps working — **and checked that none silently stops applying**. Plus Jakarta Sans / DM Sans / JetBrains Mono through `next/font` after reading `node_modules/next/dist/docs`. **Fonts verified in the built CSS and on the rendered `<html>`**, never by eye: E1 shipped the whole app in Times behind a self-referential `--font-sans`
+- [ ] **2 ·** 264px sidebar ≥1100px, 88px icon rail 700–1100px, 60px header + floating tab bar <700px. "New request" the only filled button in the sidebar. Review's pending count in amber, an amber dot in the rail. Every page: eyebrow, title, one-line lede
+- [ ] **3 ·** Shared pieces at the reference's sizes — buttons 48/56/40px with 16px text, inputs 54px, cards radius 20 (28 hero), pill chips, meter with a threshold tick. Re-scales `src/components/ui/{button,badge,card}.tsx`
+- [ ] **4 ·** `rise`/`growx`/`pop` keyframes, `[data-stagger]` at 45ms capped at 12 rows, `grid-template-rows: 0fr→1fr` expands, durations 140/240/560/900ms, `ease-out` and `ease-spring`. One small client component for count-up. **Everything stops under `prefers-reduced-motion`, final state shown immediately**
+- [ ] **5 ·** Review: queue plus one decision at a time, gauge with threshold tick, animated confirm and reject. New request: wide form, sliding channel selector, animated five-step pipeline, three result variants. Priority: weights bar, expandable rows with factors — **band, account count and ARR render final on load, no count-up, because this board gets projected**
+- [ ] **6 ·** Problems (sliding filter, staggered rows), Problem detail (hero card, evidence cards, sticky aside), Overview (bento grid, count-up on the three figures)
+- [ ] **7 ·** All six at 390px, 44px minimum touch target, decision actions fixed above the tab bar
+- [ ] Loom labels preserved verbatim: "New request", "Use the demo request", "Submit", "Actually, mine is different", "Review", "Confirm — same problem", "Reject — not the same problem", "Priority", "Why this band"
+- [ ] `LOOM_SCRIPT.md` click paths updated for Review's one-at-a-time queue, still under 700 spoken words, every number still matching what `npm run demo:reset` produces
+- [ ] AA contrast **measured** in both themes; amber only for needs-review and degraded; all routes 200; tests, typecheck, lint, build and the Impeccable detector pass; no new dependency; no eval run and no model calls
+
+**Deliberate departure from the reference, agreed before starting:** `Vistas.md` makes Priority four band *tab cards* that swap the panel, showing one band at a time. **Priority stays stacked.** The Loom's key beat is data residency in `now` at the top against notification scoping in `no` below it, in one view, often projected — tabs destroy exactly that contrast. The four band cards are built as a summary header (band name and count) whose cards are **anchor links that scroll to their band**, which keeps the design's shape without costing the comparison.
+
+**Actual:** · **Status:** In progress · **Deviation:**
 ---
 
 ## Open questions — final state

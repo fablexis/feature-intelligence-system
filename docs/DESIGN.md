@@ -1,117 +1,133 @@
-# Design direction — E1
+# Design direction — "claro y vivo"
 
-**Scope:** the four demo-path screens plus the PM review queue
-([DEMO.md](./DEMO.md)). Product context is [PRODUCT.md](./PRODUCT.md) — this
-file does not restate it. Mode: **Operate**. Written at E1, outside the
-appetite, as the direction the screens were cut against.
+**Scope:** the six demo-path screens ([DEMO.md](./DEMO.md)). Product context is
+[PRODUCT.md](./PRODUCT.md) — this file does not restate it. Mode: a working tool
+for a PM.
 
-## The scene decides everything
+**Reference:** the approved Design System artifact, version `1791429185-4f66`,
+exported in full to [`docs/design/reference/`](./design/reference) — tokens,
+brand book, per-view notes and thirteen live HTML mockups. The mockups are the
+visual source of truth; they are rebuilt as React components, never copied in.
+Their sample content (Northwind Traders and friends) is invented and is never
+hardcoded: every screen renders the data the app already loads.
 
-PRODUCT's usage scene gives two hard constraints the look has to answer, and
-they pull in opposite directions:
+This replaces the direction written at E1. What it supersedes, and why, is
+recorded at the end rather than quietly dropped.
+
+## The idea
+
+A tool for deciding what to build should feel **light, fast and sure of
+itself**. Near-white cool background, one saturated ultramarine doing all the
+pointing, soft cards with a blue-tinted shadow, and a lot of air. Motion
+explains: what arrives, enters; what is computed, fills; what can be pressed,
+answers.
+
+Two constraints from PRODUCT's usage scene still decide the hard calls:
 
 - **The PM is in a 30–45 minute triage block, resumable mid-way.** Density and
-  scanability beat decoration: the answer to "what needs me?" must be legible
-  without reading prose.
-- **The board is frequently projected in prioritization meetings.** A projector
-  loses contrast and fine weight differences. So the two numbers Beat 2 turns on
-  — **band** and **account count** — are set at display size with real color
-  separation, while everything supporting them stays small.
-
-A tool you visit, not one you live in: no dashboard furniture, no onboarding,
-no decoration that has to be scrolled past on the second visit.
-
-## Type
-
-One family (Geist Sans), fixed rem scale, ~1.2 ratio. It has to be wired to the
-variable `next/font` actually defines: a self-referential `--font-sans` in the
-theme block silently invalidated the declaration and shipped the whole app in the
-browser's default serif, which no amount of scale discipline survives. Geist Mono carries
-**measurements only** — cosine, confidence, weighted sums, thresholds — because
-those are read as digits against each other, not as words. `tabular-nums` on
-every number that appears in a column so the digits line up down the page.
-Prose capped at ~70ch; metric strips and evidence rows run denser.
+  scanability beat decoration.
+- **The board gets projected in prioritization meetings.** A projector loses
+  contrast and fine weight differences, so band and account count stay at
+  display size.
 
 ## Color
 
-Restrained, with exactly three color roles. Everything else is neutral.
+One accent. Ultramarine does three jobs and no others: primary action, active
+navigation, emphasis on figures. Everything else is neutral.
 
-1. **The band ladder** — one hue (blue 250–255) stepped by intensity:
-   `now` solid, `next` tinted, `later` outlined, `no` neutral. An ordinal scale
-   gets a sequential ramp, so the ordering is visible before the labels are
-   read, and nothing in the ranking shares a hue with an alarm.
-2. **Honest flags** — amber (`--flag`), and only for the two things the product
-   promised to never hide: `needs review` and the **degraded path**. Reserved:
-   if amber appeared anywhere decorative, the degraded label would stop meaning
-   anything.
-3. **Destructive** — the existing red, on reject/un-merge only.
+- **The band ladder** is that same blue in four intensities — `now` solid,
+  `next` tinted, `later` outlined, `no` neutral — so the ordering reads before
+  the label does. The label still carries the word; colour is never the only
+  carrier of meaning.
+- **Amber (`flag`) is reserved** for "a person must decide" and "something is
+  degraded". Nothing decorative may use it. This rule survives from E1 and is
+  the one most easily broken by accident.
+- Rose for destructive, mint for success. Both soft, both always with a word.
 
-`--muted-foreground` moves from `oklch(0.556)` (4.74:1 — passing, but thin
-under a projector) to `oklch(0.5)` (6:1). Browser surfaces are themed from the
-palette: selection, caret, focus ring, scrollbar.
+Day and Night, both AA-verified, following `prefers-color-scheme`. **No toggle**
+— the OS already holds that preference.
 
-## Components
+## Type
 
-- **Band chip** is the only element allowed display size. It carries the band
-  and, beside it, the raw distinct-account count — the comparison Beat 2 exists
-  for. Those two never separate.
-- **Provenance block** is one shape used everywhere a model spoke: what it
-  concluded · confidence · text similarity · why, and beneath it what a person
-  changed. Same
-  shape on the queue, the detail page and the board, so "what did the AI say
-  here" is answered by recognition rather than by reading.
-- **Flat rows over cards.** The board was 23 stacked cards each with an open
-  form; it is now band-grouped rows with the decomposition behind a
-  `<details>`. Nested cards are gone.
-- **States:** empty states say, in product language, why the screen is empty and
-  what would fill it; loading states are skeletons matching the row geometry they
-  replace; errors name the failure and the recovery. Every screen on the demo
-  path has all three, because a reviewer following README on a fresh clone hits
-  the empty ones first.
+Three families, each with one job:
 
-## Copy
+- **Plus Jakarta Sans** (500–800) — headings and figures.
+- **DM Sans** — interface text and paragraphs, 16px body on a 25px line.
+- **JetBrains Mono** — measurements only: confidence, similarity, ARR, weighted
+  sums. Never as a costume for "technical".
 
-Written for a PM, not for the people who built it. The product UI carries no
-internal vocabulary — no task IDs, no demo beat numbers, no ADR or doc paths, no
-threshold symbols like `T_auto`, no shell commands — because every one of those
-asks the reader to hold a second model of the system in their head just to read
-a screen. The depth is not lost; it lives in the README, `docs/` and the code
-comments, where someone looking for it is already looking.
+Everything is larger than at E1: body 16, button text 16 in a 48px control (56
+for the primary action), figures up to 64. Prose caps at ~70 characters.
 
-Two rules make that concrete:
+They must be wired to the variables `next/font` actually defines. E1 shipped the
+entire app in the browser's default serif because `--font-sans` referenced
+itself, so the theme block points at the font variables and never at itself —
+and the result is verified in the built CSS, not by eye.
 
-- **Name the outcome, not the column.** The database stores `needs_review` and a
-  boolean; the screen says "confirmed as the same problem". The record keeps
-  both values either way.
-- **Keep the honest numbers, lose the jargon.** "Measured recall is 0.466" became
-  "it catches a bit under half the duplicates it should", and the front door
-  still says what the system gets wrong before a reviewer finds it. Plain
-  language is not softer language.
+## Form
 
-The single exception is `app/error.tsx`: a crash screen is read by whoever is
-running the project locally, and there the exact `npm run` recovery is the
-kindest thing on the page.
-
-## Bands
-
-The ladder is four cut points over one score, and the cut points are a design
-decision as much as a scoring one. `w1` put **10 of 23** problems in `now`,
-which is a list rather than a prioritisation — the band stopped carrying
-information. `w2` places the boundaries in the two widest gaps in the measured
-distribution (0.815/0.780 among the leaders, 0.665/0.520 between the real
-candidates and the tail), so `now` holds 4 and no boundary splits a cluster of
-near-identical scores. Nothing in this build measures whether those cut points
-are *right* — which is exactly why the weighting file is the PM's and every band
-is overridable with a recorded reason.
+Cards at radius 20 (28 on hero), a blue-tinted shadow that deepens on hover,
+near-invisible borders. Buttons at radius 12, fields at 54px, chips and bands as
+pills. Spacing on a 4px scale: 24px inside a card, 32px between them.
 
 ## Motion
 
-150 ms on hover/border/background only. No entrance choreography: the PM is
-mid-task and the board is often already on a projector when it loads.
+Moderate and purposeful. Seven moves, no more:
 
-## Out of scope for E1
+1. **Stagger** — rows enter one at a time, 45ms apart, capped at 12.
+2. **Count-up** — a figure rises to its value in 900ms.
+3. **Bars fill** from the left.
+4. **Lift** — 3px on anything pressable.
+5. **Expand** — height via `grid-template-rows: 0fr → 1fr`, no JS measuring.
+6. **Sliding indicator** on filters and segmented controls.
+7. **Spring** — confirmations and toasts only, once per screen.
 
-Dark mode ships as tokens but has no toggle (the scene is a lit meeting room, so
-light is the default and the only path exercised). No charts — the board's job
-is comparison between two rows, not a trend. No in-app weight editing
-([D6](./PRODUCT.md#recorded-decisions)).
+Durations 140 / 240 / 560 / 900ms. `ease-out` for entrances and fills,
+`ease-spring` for the two places that are allowed to bounce.
+
+**Under `prefers-reduced-motion` everything stops and the final state shows
+immediately.** Not "reduced" — stopped.
+
+**One exception, deliberately: the priority board never counts up.** It is read
+off a projector while someone is talking. Band, account count and ARR render
+final on load. Count-up belongs to Overview, where nobody is mid-sentence.
+
+## Copy
+
+Written for a PM, not for the people who built it. No task IDs, no demo beat
+numbers, no ADR paths, no threshold symbols like `T_auto`, no shell commands —
+each of those asks the reader to hold a second model of the system just to read
+a screen. The depth lives in the README, `docs/` and the code comments.
+
+- **Name the outcome, not the column.** The database stores `needs_review`; the
+  screen says "confirmed as the same problem".
+- **Keep the honest numbers, lose the jargon.** "recall 0.466" became "it
+  catches a bit under half the duplicates it should". Plain language is not
+  softer language.
+
+Every page opens the same way: eyebrow, title, one-line lede.
+
+The one exception is `app/error.tsx`, a crash screen read by whoever is running
+the project locally, where the exact `npm run` recovery is the kindest thing on
+the page.
+
+## Deliberate departure from the reference
+
+**Priority stays stacked.** `Vistas.md` makes it four band *tab cards* that swap
+the panel, showing one band at a time. The Loom's key beat is data residency in
+`now` at the top against notification scoping in `no` below it — fewer accounts,
+higher band — visible in one view and usually projected. Tabs destroy exactly
+that comparison. The four band cards are kept as a summary header carrying band
+name and count, built as **anchor links that scroll to their band**. The
+design's shape survives, and so does the contrast.
+
+## What this supersedes from E1
+
+| E1 decision | Now | Why |
+|---|---|---|
+| One type family (Geist), tight 1.2 scale | Three families with distinct jobs, larger scale | The reference separates heading, text and measurement, and the larger scale is what makes a projected board legible |
+| Motion: 150ms transitions only, no entrance choreography | Seven moves, 140–900ms, staggered entrances | "Motion explains" is the approved direction. The reduced-motion rule is stricter than E1's, not looser |
+| Dark tokens defined with no path to them | `prefers-color-scheme`, both themes real and measured | Tokens nobody can reach are decoration |
+| Ordinal band ladder; amber reserved; band and account count at display size | **Unchanged** | These were right, and the reference arrives at the same three independently |
+| PM copy with no internal jargon | **Unchanged** | |
+| Empty states name what is missing in product language | **Unchanged**, plus skeletons that hold the content's shape so nothing jumps | |
