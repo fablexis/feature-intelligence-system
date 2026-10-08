@@ -377,3 +377,519 @@
     }
   }
 }
+
+/*
+ * The app shell — sidebar, icon rail, mobile tab bar and page header.
+ *
+ * Written as component classes rather than utility soup because the reference
+ * ships it as one stylesheet shared by every mockup (docs/design/reference),
+ * and because three breakpoints with different structures read better as three
+ * media queries than as thirty arbitrary variants. Layout.md sets the sizes:
+ * 264px sidebar from 1100px, an 88px icon rail from 700, no sidebar below it.
+ */
+@layer components {
+  .app {
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    min-height: 100vh;
+    background:
+      radial-gradient(900px 420px at 18% -8%, var(--accent-tint), transparent 62%),
+      var(--surface);
+  }
+
+  .side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4);
+    background: var(--surface-raised);
+    border-right: 1px solid var(--line);
+  }
+
+  .side-in {
+    position: sticky;
+    top: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    min-height: calc(100vh - var(--space-8));
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: 0 var(--space-2);
+  }
+
+  .brand b {
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 24px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .brand i {
+    position: relative;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 10px;
+    background: var(--accent);
+    box-shadow: 0 8px 18px -8px var(--accent);
+  }
+
+  .brand i::after {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: 14px;
+    height: 14px;
+    border-radius: 5px;
+    border: 3px solid var(--on-accent);
+  }
+
+  .nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .nav a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 48px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-md-v);
+    font-weight: 600;
+    color: var(--ink-muted);
+    transition:
+      background var(--duration-fast),
+      color var(--duration-fast),
+      transform var(--duration-base) var(--ease-out);
+  }
+
+  .nav a:hover {
+    background: var(--surface-sunken);
+    color: var(--ink);
+    transform: translateX(3px);
+  }
+
+  .nav a[aria-current] {
+    background: var(--accent-tint);
+    color: var(--on-accent-tint);
+  }
+
+  /* The active mark sits in the sidebar's own padding, not inside the item. */
+  .nav a[aria-current]::before {
+    content: "";
+    position: absolute;
+    left: -16px;
+    top: 12px;
+    bottom: 12px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--accent);
+  }
+
+  .side-foot {
+    margin-top: auto;
+    padding: var(--space-4);
+    border-radius: var(--radius-md-v);
+    background: var(--surface-sunken);
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--ink-muted);
+  }
+
+  .main {
+    padding: var(--space-6) var(--space-7) 96px;
+    min-width: 0;
+  }
+
+  .main-in {
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  /* Every page opens the same way: eyebrow, title, one-line lede. */
+  .pghead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-6);
+    padding: var(--space-5) 0 var(--space-6);
+  }
+
+  .pghead h1 {
+    margin: var(--space-3) 0;
+  }
+
+  .pghead .lede {
+    max-width: 56ch;
+    color: var(--ink-muted);
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 30px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--accent-tint);
+    color: var(--on-accent-tint);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .about {
+    font-size: 14px;
+    color: var(--ink-muted);
+  }
+
+  .about b {
+    color: var(--ink);
+    font-weight: 600;
+    border-bottom: 2px solid var(--accent-tint);
+  }
+
+  /* The amber count, and its rail form. Amber means one thing only. */
+  .count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 13px;
+    background: var(--flag);
+    color: var(--on-flag);
+    border: 1px solid var(--flag-line);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .nav .count {
+    margin-left: auto;
+  }
+
+  /* Only the rail shows it; the full sidebar shows the number instead. */
+  .rail-dot {
+    display: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--flag-line);
+    box-shadow: 0 0 0 2px var(--surface-raised);
+  }
+
+  .mobile-top,
+  .tabbar {
+    display: none;
+  }
+
+  /* ---- 700–1100px: the sidebar becomes an icon rail -------------------- */
+  @media (max-width: 1099px) and (min-width: 700px) {
+    .app {
+      grid-template-columns: 88px minmax(0, 1fr);
+    }
+
+    .side {
+      padding: var(--space-5) var(--space-2);
+      align-items: center;
+    }
+
+    .side-in {
+      align-items: center;
+    }
+
+    .brand {
+      padding: 0;
+    }
+
+    .nav a {
+      justify-content: center;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+    }
+
+    .nav a:hover {
+      transform: none;
+    }
+
+    .nav a[aria-current]::before {
+      display: none;
+    }
+
+    .main {
+      padding: var(--space-6) var(--space-5) 96px;
+    }
+
+    /* Label, count and footnote are the three things the rail cannot hold. */
+    .rail-hide {
+      display: none;
+    }
+
+    .rail-dot {
+      display: block;
+    }
+  }
+
+  /* ---- below 700px: no sidebar, a header and a floating tab bar --------- */
+  @media (max-width: 699px) {
+    .app {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .side {
+      display: none;
+    }
+
+    .mobile-top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      height: 60px;
+      padding: 0 var(--space-4);
+      background: color-mix(in srgb, var(--surface-raised) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .main {
+      padding: var(--space-5) var(--space-4) 112px;
+    }
+
+    .pghead {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+      padding: var(--space-3) 0 var(--space-5);
+    }
+
+    .tabbar {
+      position: fixed;
+      z-index: 20;
+      left: var(--space-4);
+      right: var(--space-4);
+      bottom: var(--space-4);
+      display: flex;
+      justify-content: space-around;
+      gap: var(--space-1);
+      padding: var(--space-2);
+      border-radius: var(--radius-pill);
+      background: color-mix(in srgb, var(--surface-raised) 94%, transparent);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow-lift);
+    }
+
+    /* 44px is the floor for a touch target; these are 56 wide and 48 tall. */
+    .tabbar a {
+      position: relative;
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      min-width: 56px;
+      height: 48px;
+      border-radius: var(--radius-pill);
+      color: var(--ink-muted);
+      font-size: 11px;
+      font-weight: 600;
+      transition: background var(--duration-fast), color var(--duration-fast);
+    }
+
+    .tabbar a[aria-current] {
+      background: var(--accent-tint);
+      color: var(--on-accent-tint);
+    }
+
+    .tabbar .count {
+      position: absolute;
+      top: 1px;
+      right: 8px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      font-size: 11px;
+    }
+  }
+}
+
+/*
+ * Buttons and skeletons. The shell needs them, so they land here rather than
+ * waiting for the shared-pieces step; that step wires the shadcn primitives
+ * onto these same classes instead of inventing a second button vocabulary.
+ *
+ * 48px default, 56 for a primary action, never below 40, and 16px text
+ * throughout — the reference is explicit that a button is never smaller.
+ */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    height: 48px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-md-v);
+    border: 1px solid transparent;
+    background: transparent;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      background var(--duration-fast),
+      border-color var(--duration-fast),
+      color var(--duration-fast);
+  }
+
+  .btn:active {
+    transform: scale(0.97);
+  }
+
+  .btn-lg {
+    height: 56px;
+    padding: 0 var(--space-6);
+    font-size: 17px;
+    border-radius: 14px;
+  }
+
+  .btn-sm {
+    height: 40px;
+    padding: 0 var(--space-4);
+    font-size: 15px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+    box-shadow: 0 10px 20px -10px var(--accent);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 26px -12px var(--accent);
+  }
+
+  .btn-secondary {
+    background: var(--surface-raised);
+    border-color: var(--line-strong);
+    color: var(--ink);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .btn-danger {
+    background: var(--destructive-tint);
+    color: var(--destructive);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 22px -14px var(--destructive);
+  }
+
+  .btn-ghost {
+    color: var(--ink-muted);
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface-sunken);
+    color: var(--ink);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .tlink {
+    color: var(--accent);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tlink:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+
+  /* Loading keeps the shape of the content so the page does not jump. */
+  .skel {
+    display: block;
+    border-radius: var(--radius-sm-v);
+    background: linear-gradient(
+      90deg,
+      var(--surface-sunken) 30%,
+      var(--accent-tint) 50%,
+      var(--surface-sunken) 70%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skel {
+      animation: none;
+    }
+
+    .btn:hover,
+    .btn:active {
+      transform: none;
+    }
+  }
+}

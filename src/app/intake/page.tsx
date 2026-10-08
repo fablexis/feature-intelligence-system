@@ -28,13 +28,13 @@ export default async function IntakePage() {
     .all();
 
   return (
-    <AppShell current="/intake" width="max-w-3xl">
+    <AppShell current="/intake">
       {/*
         The explanation lives here and only here. It used to be repeated on the
         form card below, which made a 60-second submitter read the same sentence
         twice before reaching the first field.
       */}
-      <PageHeader title="File a request">
+      <PageHeader eyebrow="New request" title="File a request">
         File it the way a CSM would, minutes after a call. Before anything is saved, this checks
         whether the problem underneath is one other customers have already raised — so you find out
         inside the same minute, instead of getting a ticket number and hearing nothing.

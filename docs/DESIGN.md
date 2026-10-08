@@ -88,6 +88,11 @@ Durations 140 / 240 / 560 / 900ms. `ease-out` for entrances and fills,
 **Under `prefers-reduced-motion` everything stops and the final state shows
 immediately.** Not "reduced" — stopped.
 
+The Impeccable detector flags `ease-spring` as bounce easing, and it is kept
+anyway: it is the reference's own token, and the brief scopes it to
+confirmations and toasts — two moments per screen, once each. A warning that
+the approved direction overrides is recorded here rather than silenced.
+
 **One exception, deliberately: the priority board never counts up.** It is read
 off a projector while someone is talking. Band, account count and ARR render
 final on load. Count-up belongs to Overview, where nobody is mid-sentence.

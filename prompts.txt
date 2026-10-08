@@ -569,3 +569,24 @@ The 31 reference files are in docs/design/reference/ and the artifact's own 2.5M
 DESIGN.md rewritten for "claro y vivo". It names what it supersedes from E1 in a table - one type family, 150ms-only motion with no entrance choreography, and dark tokens with no path to them - and what it keeps, which is the ordinal band ladder, amber reserved for needs-review and degraded, band and account count at display size, and PM copy with no internal jargon. The reference independently arrives at those same three, which is worth recording. The priority board's no-count-up exception is written in as a deliberate rule rather than an oversight, for the projector.
 
 The agreed departure from the reference is recorded in both places it belongs: Priority stays stacked, and the four band cards become a summary header of anchor links that scroll to their band. Vistas.md wanted tabs that swap the panel; that would destroy the one comparison the Loom is built on.
+
+=== 2026-10-08T05:05:00Z ===
+PROMPT (verbatim):
+Continue through step 1 and step 2 without stopping, then stop after step 2 so the tokens, fonts and shell can be reviewed together in a browser. Push after each commit as agreed.
+
+On line-strong: measure it in step 1. If it fails 3:1 against any of the three surfaces, adjust the token, and record the change and the measured ratios in DESIGN.md as a departure from tokens.json.
+
+When you stop, tell me which routes to look at and anything you want checked by eye.
+
+RESPONSE (entry 29):
+Steps 1 and 2 done, committed and pushed separately.
+
+line-strong does not need adjusting, so there is no departure to record. Wrote scripts/check-contrast.ts (npm run check:contrast) rather than eyeballing: it reads the committed reference, resolves the {alias} indirections, and measures all 62 pairs the system asserts in both themes. Everything clears. line-strong is the tightest at 3.48 / 3.76 / 3.19 on surface / raised / sunken in Day and 4.98 / 4.56 / 5.08 in Night, against 3:1; next tightest is flag-line on surface at 3.20. The script reads tokens.json rather than globals.css on purpose, so drift between the reference and the CSS fails the check instead of becoming a slightly-too-pale border nobody measures.
+
+Fonts verified three ways, because E1's bug was exactly this and it fails silently: the built CSS resolves --font-sans / --font-display / --font-mono to the next/font variables and nothing points at itself, the rendered <html> carries all three generated classes, and all three woff2 files serve 200. Tailwind's dark variant is now the media query, which is what makes the dark tokens reachable at all - nothing in the app ever added a .dark class, so they were decoration. Checked all nine dark: utilities in src/ individually; every one still compiles under prefers-color-scheme.
+
+Legacy shadcn token names are kept as aliases onto the new ones, per Implementacion.md's table, so every component restyled without being touched and the views can migrate one at a time. Radii are explicit rather than a calc chain, which lands the badge's existing rounded-4xl on the pill the chips were always meant to be.
+
+The shell is three shapes from one markup, switched in CSS: 264px sidebar from 1100, 88px icon rail from 700 where the amber count becomes an amber dot, and below that no sidebar - a 60px header and a floating tab bar. Nav is Overview / Problems / Priority / Review with the flagged count in amber; New request is the only filled button. Every page now opens with eyebrow, title and lede, so titles say something instead of repeating the section: "23 problems behind 55 requests" from real data, "What to work on, and why", "11 matches waiting on you".
+
+One detector warning kept deliberately: ease-spring reads as bounce easing. It is the reference's own token and the brief scopes it to confirmations and toasts only, so the brief wins; recorded in DESIGN.md rather than silenced.

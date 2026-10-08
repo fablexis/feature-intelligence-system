@@ -1,100 +1,136 @@
 /**
- * The chrome every demo-path screen shares — see [DESIGN](../../docs/DESIGN.md).
+ * The chrome every screen shares — see [DESIGN](../../docs/DESIGN.md) and the
+ * Shell mockup in `docs/design/reference/components/Shell/`.
  *
- * One header, one container, one vocabulary for empty / loading / error. A PM
- * resuming triage mid-way needs the same three things in the same place on
- * every screen: where am I, what needs me, and where do I go next. The flagged
- * count rides in the nav for exactly that reason — it is the only number on
- * this product that means "a human owes this a look", so it is visible from
- * every screen rather than only from the one that lists it.
+ * Three shapes, one markup, switched by CSS in `globals.css`: a 264px sidebar
+ * from 1100px, an 88px icon rail from 700, and below that no sidebar at all —
+ * a 60px header and a floating tab bar, because a sidebar on a phone is a
+ * drawer nobody opens.
+ *
+ * Navigation does not move between views. "New request" is the only filled
+ * button in the sidebar, and the flagged count rides in the nav in amber
+ * because it is the one number that means "a person owes this a look".
  */
+import { ChartColumn, House, Inbox, Layers, Plus } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { db } from '@/db';
 import { flaggedCount } from '@/problems/provenance';
 
 const NAV = [
-  { href: '/problems', label: 'Problems' },
-  { href: '/priority', label: 'Priority' },
-  { href: '/review', label: 'Review' },
-  { href: '/intake', label: 'New request' },
+  { href: '/', label: 'Overview', Icon: House },
+  { href: '/problems', label: 'Problems', Icon: Layers },
+  { href: '/priority', label: 'Priority', Icon: ChartColumn },
+  { href: '/review', label: 'Review', Icon: Inbox },
 ] as const;
 
-/**
- * `current` is matched by prefix, not equality, so a problem detail page still
- * highlights Problems.
- */
-export function AppShell({
-  current,
-  children,
-  width = 'max-w-5xl',
-}: {
-  current?: string;
-  children: ReactNode;
-  width?: string;
-}) {
+/** Prefix match, so a problem detail page still highlights Problems. */
+const isCurrent = (href: string, current?: string) =>
+  href === '/' ? current === '/' : current?.startsWith(href);
+
+export function AppShell({ current, children }: { current?: string; children: ReactNode }) {
   const flagged = flaggedCount(db);
+
   return (
-    <>
-      <header className="bg-background/95 sticky top-0 z-10 border-b backdrop-blur">
-        <div className={`mx-auto flex ${width} flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3`}>
-          <Link href="/" className="text-sm font-semibold tracking-tight">
-            Ledgerline <span className="text-muted-foreground font-normal">feature intelligence</span>
+    <div className="app">
+      <aside className="side">
+        <div className="side-in">
+          <Link href="/" className="brand">
+            <i aria-hidden />
+            <b className="rail-hide">Ledgerline</b>
           </Link>
-          <nav className="flex items-center gap-1 text-sm">
-            {NAV.map((item) => {
-              const active = current === item.href;
+
+          <Link
+            href="/intake"
+            className="btn btn-primary btn-lg w-full"
+          >
+            <Plus className="size-5 shrink-0" aria-hidden />
+            <span className="rail-hide">New request</span>
+          </Link>
+
+          <nav className="nav">
+            {NAV.map(({ href, label, Icon }) => {
+              const active = isCurrent(href, current);
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={`hover:bg-muted rounded-md px-2 py-1 transition-colors ${
-                    active ? 'bg-muted font-medium' : 'text-muted-foreground'
-                  }`}
-                >
-                  {item.label}
-                  {item.href === '/review' && flagged > 0 && (
-                    <span className="bg-flag text-flag-fg border-flag-border num ml-1.5 rounded-full border px-1.5 py-0.5 text-xs font-medium">
-                      {flagged}
-                    </span>
+                <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
+                  <Icon className="size-5 shrink-0" aria-hidden />
+                  <span className="rail-hide">{label}</span>
+                  {href === '/review' && flagged > 0 && (
+                    <>
+                      <span className="count num rail-hide">{flagged}</span>
+                      {/* The rail has no room for the number, so it keeps the colour. */}
+                      <span className="rail-dot" aria-hidden />
+                    </>
                   )}
                 </Link>
               );
             })}
           </nav>
-        </div>
-      </header>
-      <main className={`mx-auto flex ${width} flex-col gap-8 px-6 pt-8 pb-16`}>{children}</main>
-    </>
-  );
-}
 
-/** Title, one sentence of what this screen is for, and the numbers behind it. */
-export function PageHeader({
-  title,
-  children,
-  metrics,
-}: {
-  title: string;
-  children?: ReactNode;
-  metrics?: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-      {children && (
-        <div className="text-muted-foreground max-w-[70ch] text-sm leading-relaxed">{children}</div>
-      )}
-      {metrics && <dl className="flex flex-wrap gap-x-8 gap-y-3 pt-1">{metrics}</dl>}
+          <p className="side-foot rail-hide">
+            Showing <b className="text-ink font-semibold">Ledgerline</b>, the sample company
+            loaded on this machine.
+          </p>
+        </div>
+      </aside>
+
+      <header className="mobile-top">
+        <Link href="/" className="brand">
+          <i aria-hidden />
+          <b>Ledgerline</b>
+        </Link>
+      </header>
+
+      <main className="main">
+        <div className="main-in">{children}</div>
+      </main>
+
+      <nav className="tabbar" aria-label="Sections">
+        {NAV.map(({ href, label, Icon }) => {
+          const active = isCurrent(href, current);
+          return (
+            <Link key={href} href={href} aria-current={active ? 'page' : undefined}>
+              <Icon className="size-5" aria-hidden />
+              {label === 'Overview' ? 'Home' : label}
+              {href === '/review' && flagged > 0 && <span className="count num">{flagged}</span>}
+            </Link>
+          );
+        })}
+      </nav>
     </div>
   );
 }
 
 /**
- * One number set large enough to read from across a room, with its label under
- * it rather than beside it — a label that wraps must not push the number.
+ * Eyebrow, title, one-line lede — the same three things on every page, in the
+ * same order, so a PM resuming triage knows where they are without reading.
  */
+export function PageHeader({
+  eyebrow,
+  title,
+  children,
+  metrics,
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  children?: ReactNode;
+  metrics?: ReactNode;
+}) {
+  return (
+    <div className="pghead">
+      <div className="min-w-0">
+        <span className="eyebrow">{eyebrow}</span>
+        <h1 className="h1">{title}</h1>
+        {children && <p className="lede">{children}</p>}
+      </div>
+      {metrics && (
+        <dl className="flex shrink-0 flex-wrap gap-x-8 gap-y-4 pb-1">{metrics}</dl>
+      )}
+    </div>
+  );
+}
+
+/** One number set large enough to read from across a room. */
 export function Metric({
   label,
   value,
@@ -107,15 +143,9 @@ export function Metric({
   tone?: 'default' | 'flag';
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <dd
-        className={`num text-2xl leading-none font-semibold tracking-tight ${
-          tone === 'flag' ? 'text-flag-fg' : ''
-        }`}
-      >
-        {value}
-      </dd>
-      <dt className="text-muted-foreground text-xs">
+    <div className="flex flex-col gap-1">
+      <dd className={`numeral-lg num ${tone === 'flag' ? 'text-on-flag' : ''}`}>{value}</dd>
+      <dt className="text-ink-muted body-sm">
         {label}
         {hint && <span className="block opacity-80">{hint}</span>}
       </dt>
@@ -127,20 +157,12 @@ export function Metric({
  * Empty states say, in the product's own language, why a screen is empty and
  * what would fill it — never "nothing here", which leaves a reader guessing
  * whether the build is broken or the data has not been loaded.
- *
- * They used to print the shell commands. They no longer do: these are PM-facing
- * screens, and the setup steps belong in the README, where someone running the
- * project is already looking. The one exception is `app/error.tsx`, which is a
- * crash screen for whoever is running it locally, and there the exact command
- * *is* the kindest thing to show.
  */
 export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border border-dashed px-6 py-10 text-center">
-      <p className="font-medium">{title}</p>
-      <p className="text-muted-foreground mx-auto mt-1.5 max-w-[55ch] text-sm leading-relaxed">
-        {children}
-      </p>
+    <div className="border-line-strong rounded-[var(--radius-lg-v)] border border-dashed px-6 py-12 text-center">
+      <p className="h2">{title}</p>
+      <p className="text-ink-muted mx-auto mt-3 max-w-[55ch] leading-relaxed">{children}</p>
     </div>
   );
 }
@@ -150,22 +172,28 @@ export function Note({ children }: { children: ReactNode }) {
   return (
     <p
       role="status"
-      className="bg-muted border-border rounded-md border px-3 py-2 text-sm"
+      className="bg-surface-sunken rounded-[var(--radius-md-v)] px-4 py-3 text-sm"
     >
       {children}
     </p>
   );
 }
 
-/** Skeletons match the geometry of the rows they stand in for. */
+/** Skeletons hold the shape of the content they stand in for, so nothing jumps. */
 export function RowSkeleton({ rows = 6 }: { rows?: number }) {
   return (
-    <div className="flex flex-col gap-2" aria-hidden>
+    <div className="flex flex-col gap-3" aria-hidden>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 rounded-lg border p-4">
-          <div className="bg-muted h-7 w-16 animate-pulse rounded-md" />
-          <div className="bg-muted h-4 flex-1 animate-pulse rounded" style={{ maxWidth: `${70 - i * 4}%` }} />
-          <div className="bg-muted h-7 w-10 animate-pulse rounded-md" />
+        <div
+          key={i}
+          className="bg-surface-raised ring-line flex items-center gap-5 rounded-[var(--radius-lg-v)] p-6 ring-1"
+        >
+          <span className="skel h-10 w-14" />
+          <span className="flex flex-1 flex-col gap-2">
+            <span className="skel h-4" style={{ width: `${70 - i * 4}%` }} />
+            <span className="skel h-3 w-2/5" />
+          </span>
+          <span className="skel h-7 w-20" />
         </div>
       ))}
     </div>
