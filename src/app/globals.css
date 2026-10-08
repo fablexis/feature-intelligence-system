@@ -919,3 +919,421 @@
     }
   }
 }
+
+/*
+ * The signals — the pieces that repeat on every screen. Lifted from the
+ * Signals mockup in docs/design/reference, which is the same stylesheet every
+ * other mockup shares.
+ *
+ * Two rules carry meaning rather than style: the band always carries its word
+ * so colour is never the only signal, and amber means one thing only.
+ */
+@layer components {
+  .band {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    height: 30px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* Display size, for the board that gets projected. */
+  .band-lg {
+    height: 44px;
+    min-width: 104px;
+    padding: 0 var(--space-5);
+    font-size: 15px;
+    letter-spacing: 0.08em;
+  }
+
+  .band-now {
+    background: var(--band-now);
+    color: var(--on-band-now);
+  }
+
+  .band-next {
+    background: var(--band-next);
+    color: var(--on-band-next);
+  }
+
+  .band-later {
+    background: var(--band-later);
+    color: var(--on-band-later);
+    border-color: var(--band-later-line);
+  }
+
+  .band-no {
+    background: var(--band-no);
+    color: var(--on-band-no);
+    border-color: var(--line);
+  }
+
+  .band-unscored {
+    background: transparent;
+    color: var(--ink-muted);
+    border-style: dashed;
+    border-color: var(--line-strong);
+  }
+
+  /* Amber, and only ever for "a person must decide" or "degraded". */
+  .flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 var(--space-3);
+    border: 1px solid var(--flag-line);
+    background: var(--flag);
+    color: var(--on-flag);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .flag::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2.4s var(--ease-out) infinite;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 var(--flag-line);
+    }
+    60% {
+      box-shadow: 0 0 0 7px transparent;
+    }
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 30px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+    color: var(--ink-muted);
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .chip-ok {
+    background: var(--success-tint);
+    color: var(--on-success-tint);
+    font-weight: 600;
+  }
+
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-4);
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--ink-muted);
+  }
+
+  /* A bar that fills, with a tick where the threshold sits. */
+  .meter {
+    position: relative;
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface-sunken);
+  }
+
+  .meter i {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 4px;
+    background: var(--accent);
+    transform-origin: left;
+  }
+
+  .meter u {
+    position: absolute;
+    top: -5px;
+    bottom: -5px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--ink);
+    text-decoration: none;
+  }
+
+  /* What the model said, and what a person did about it. */
+  .prov {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-md-v);
+    background: var(--surface-sunken);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .prov-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-4);
+    min-height: 28px;
+  }
+
+  .prov p {
+    font-size: 15px;
+    line-height: 23px;
+    padding: var(--space-2) 0 var(--space-1);
+  }
+
+  .prov-more {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 28px;
+    background: none;
+    border: 0;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .change {
+    font-size: 14px;
+    line-height: 21px;
+    color: var(--ink-muted);
+    display: flex;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+
+  .change::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid var(--line-strong);
+    transform: translateY(1px);
+  }
+
+  /* Height expand with no JavaScript measuring anything. */
+  .xp {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--duration-slow) var(--ease-out);
+  }
+
+  .xp > div {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .xp-open {
+    grid-template-rows: 1fr;
+  }
+
+  .chev {
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+
+  .chev-open {
+    transform: rotate(180deg);
+  }
+
+  /* ---- fields ---------------------------------------------------------- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .field > span {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .input,
+  .select,
+  .area {
+    width: 100%;
+    background: var(--surface-raised);
+    border: 1.5px solid var(--line-strong);
+    border-radius: var(--radius-md-v);
+    padding: 0 var(--space-4);
+    height: 54px;
+    font-size: 17px;
+    color: var(--ink);
+    transition:
+      border-color var(--duration-fast),
+      box-shadow var(--duration-base);
+  }
+
+  .input:focus,
+  .select:focus,
+  .area:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-tint);
+  }
+
+  .area {
+    height: auto;
+    min-height: 140px;
+    padding: var(--space-4);
+    line-height: 27px;
+    resize: vertical;
+  }
+
+  .input::placeholder,
+  .area::placeholder {
+    color: var(--ink-muted);
+  }
+
+  /* ---- segmented control ----------------------------------------------- */
+  .seg {
+    position: relative;
+    display: inline-flex;
+    gap: 2px;
+    padding: 4px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-sunken);
+  }
+
+  .seg button {
+    position: relative;
+    z-index: 1;
+    height: 44px;
+    padding: 0 var(--space-4);
+    border: 0;
+    background: none;
+    border-radius: var(--radius-pill);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+    transition: color var(--duration-fast);
+  }
+
+  .seg button[aria-pressed="true"] {
+    color: var(--on-accent-tint);
+  }
+
+  .seg button b {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+
+  .seg-slide {
+    position: absolute;
+    z-index: 0;
+    top: 4px;
+    bottom: 4px;
+    left: 0;
+    width: 0;
+    border-radius: var(--radius-pill);
+    background: var(--surface-raised);
+    box-shadow:
+      0 2px 8px -2px rgba(15, 18, 38, 0.25),
+      0 0 0 1px var(--line);
+    transition:
+      left var(--duration-base) var(--ease-out),
+      width var(--duration-base) var(--ease-out);
+  }
+
+  /* ---- cards and toast -------------------------------------------------- */
+  .card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg-v);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-5);
+  }
+
+  .card-hero {
+    border-radius: var(--radius-xl-v);
+    padding: var(--space-6);
+  }
+
+  .card-accent {
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: transparent;
+  }
+
+  .card-tint {
+    background: var(--accent-tint);
+    color: var(--on-accent-tint);
+    border-color: transparent;
+  }
+
+  .card-flag {
+    background: var(--flag);
+    color: var(--on-flag);
+    border-color: var(--flag-line);
+  }
+
+  .lift {
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      background var(--duration-fast);
+  }
+
+  .lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  .toast {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 52px;
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-pill);
+    background: var(--ink);
+    color: var(--surface);
+    font-weight: 600;
+    box-shadow: var(--shadow-lift);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .flag::before {
+      animation: none;
+    }
+
+    .xp {
+      transition: none;
+    }
+
+    .lift:hover {
+      transform: none;
+    }
+  }
+}
