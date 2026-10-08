@@ -5,6 +5,16 @@
 
 Scope discipline: this document covers only what the ~3h core ([C1–C8](./TASKS.md)) needs. Extensions are named, not designed.
 
+**Two interactive diagrams, generated from the code rather than from this plan**
+([E5](./TASKS.md#e5--interactive-architecture-diagrams)): [`diagrams/architecture.html`](./diagrams/architecture.html)
+is what runs and where the model sits; [`diagrams/sequence.html`](./diagrams/sequence.html)
+is one intake submission, including both degraded branches and all three
+outcomes. Every node carries file-and-line evidence verified against the commit
+it was drawn from, so where a diagram and the prose below disagree, the diagram
+is the one that was checked — the stage table still says retrieval takes the
+top *k* (k=8), while `config/thresholds.json` ships `candidateLimit: "all"`. The
+JSON source sits beside each file and regenerates it.
+
 ---
 
 ## Components

@@ -378,6 +378,21 @@ Priority order. None are in the 180-minute budget.
 
 **Actual:** · **Status:** Todo · **Deviation:**
 
+### E5 — Interactive architecture diagrams
+**Goal:** a reviewer can see the shape of the system and the path one submission takes, without reading the code first. **Reference material, not a product feature** — nothing ships into the app.
+**Depends on:** core complete · **Outside the appetite** ([PRODUCT](./PRODUCT.md#optional-extensions-out-of-appetite)) · Built with the `archify` skill, installed globally and deliberately **not** committed into this repo.
+
+- [x] Two diagrams only: one architecture, one sequence. Both authored as Archify JSON and delivered through `finalize` at `--quality showcase`; all four gates pass on each (schema validation, delivery, strict provenance check, real-browser check). JSON source committed beside the HTML in `docs/diagrams/`
+- [x] **Architecture** drawn from `src/`: 12 components, the intake path as the emphasised route, Gemini as the one external dependency, and two boundaries — the Next.js process, and the security group where untrusted request text is handled. 29 file-and-line references, verified by the tool against committed bytes at the pinned revision
+- [x] **Sequence** is one intake submission with both degraded branches and all three outcomes, each stated with its condition. Formation follows the `same` verdict; the note on the auto-attach message says in so many words that 0.80 only decides whether a human confirms. 9 references
+- [x] **No invented infrastructure.** A card names what is absent — no queue, no cache, no vector index, no separate backend — because a reader who has seen other diagrams will assume otherwise
+- [x] Linked from `ARCHITECTURE.md` (one paragraph) and the README (one table row). Neither restates the architecture
+- [x] Both opened as real 1440×900 captures and inspected. One defect found and fixed that no gate caught: the sequence's first segment label rendered behind the leftmost participant box
+
+**Found while drawing, and worth more than the diagrams:** `docs/ARCHITECTURE.md`'s stage table says retrieval takes the top *k* (k=8), but `config/thresholds.json` ships `candidateLimit: "all"` and the pipeline compares every live problem — 23 per request on this corpus. The diagram follows the code and the discrepancy is now named in `ARCHITECTURE.md` rather than left for a reader to trip over. Also corrected against the code: scoring reads its estimates back through the **replay** provider (`scripts/score.ts:206`), recording through Gemini only when a key is set, so the arrow goes to replay rather than to the abstract interface.
+
+**Actual:** ~70 min · **Status:** Done · **Deviation:** the skill's own `npx skills add tt-a1i/archify` timed out cloning at 300s; cloning manually (~50s) and installing from the local path worked. Most of the remaining time went to one measured constraint at a time — the Reader caps viewBox width by projected font size, caps height for the legend, and requires a ratio ≥ 1.55 before it will narrow a canvas, so the sequence had to satisfy three at once and lost a participant (`resolve`, a pure function the pipeline calls) to fit.
+
 ---
 
 ## Open questions — final state

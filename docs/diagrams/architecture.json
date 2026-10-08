@@ -1,0 +1,616 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Feature Intelligence System — what runs, and where the model sits",
+    "output": "docs/diagrams/architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:fablexis/feature-intelligence-system.git",
+      "link_mode": "local-only",
+      "revision": "7be509b12b3ec50fff28a18bbdc0df70df37b83d"
+    },
+    "views": [
+      {
+        "id": "intake-path",
+        "label": "The intake path",
+        "focus": [
+          "reviewer",
+          "pages",
+          "intakeRoute",
+          "pipeline",
+          "provider",
+          "replay"
+        ],
+        "note": "One submission, from the browser to a recorded model output."
+      },
+      {
+        "id": "writes",
+        "label": "Where writes happen",
+        "focus": [
+          "actions",
+          "resolve",
+          "db",
+          "scoring"
+        ],
+        "note": "The model proposes; deterministic code writes."
+      },
+      {
+        "id": "trust",
+        "label": "Untrusted text",
+        "focus": [
+          "intakeRoute",
+          "pipeline",
+          "provider",
+          "gemini"
+        ],
+        "note": "Request text reaches a prompt that drives a merge decision."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "reviewer",
+      "type": "external",
+      "label": "Browser",
+      "sublabel": "PM triage · often projected",
+      "pos": [
+        30,
+        50
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/app/layout.tsx",
+          "line": 26,
+          "end_line": 35,
+          "label": "the shell every page renders into"
+        }
+      ]
+    },
+    {
+      "id": "pages",
+      "type": "frontend",
+      "label": "App Router pages",
+      "sublabel": "Server Components read SQLite directly",
+      "pos": [
+        270,
+        50
+      ],
+      "size": [
+        175,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/app/problems/page.tsx",
+          "line": 18,
+          "end_line": 44,
+          "label": "problem list reads at request time"
+        },
+        {
+          "path": "src/app/priority/page.tsx",
+          "line": 67,
+          "end_line": 86,
+          "label": "board re-bands on every render"
+        },
+        {
+          "path": "src/app/review/page.tsx",
+          "line": 51,
+          "end_line": 65,
+          "label": "the flagged queue"
+        }
+      ]
+    },
+    {
+      "id": "actions",
+      "type": "backend",
+      "label": "Server Actions",
+      "sublabel": "every write except intake",
+      "pos": [
+        270,
+        215
+      ],
+      "size": [
+        175,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/problems/actions.ts",
+          "line": 1,
+          "end_line": 24,
+          "label": "support, un-merge, confirm, reject"
+        },
+        {
+          "path": "src/scoring/actions.ts",
+          "line": 1,
+          "end_line": 20,
+          "label": "band override, reason required"
+        }
+      ]
+    },
+    {
+      "id": "intakeRoute",
+      "type": "backend",
+      "label": "Intake route",
+      "sublabel": "POST /api/intake · NDJSON per stage",
+      "pos": [
+        550,
+        50
+      ],
+      "size": [
+        185,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/app/api/intake/route.ts",
+          "line": 24,
+          "end_line": 43,
+          "label": "the one HTTP route: a stream"
+        },
+        {
+          "path": "src/app/api/intake/route.ts",
+          "line": 16,
+          "end_line": 29,
+          "label": "Zod validates the body first"
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Intake pipeline",
+      "sublabel": "extract · embed · retrieve · adjudicate · resolve",
+      "pos": [
+        550,
+        215
+      ],
+      "size": [
+        185,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/pipeline/ingest.ts",
+          "line": 61,
+          "end_line": 135,
+          "label": "ingestRequest(), stages 1-5"
+        },
+        {
+          "path": "src/pipeline/ingest.ts",
+          "line": 141,
+          "end_line": 158,
+          "label": "stores every candidate verdict"
+        }
+      ]
+    },
+    {
+      "id": "retrieval",
+      "type": "backend",
+      "label": "Retrieval",
+      "sublabel": "brute-force cosine · all live problems",
+      "pos": [
+        455,
+        400
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/pipeline/retrieval.ts",
+          "line": 47,
+          "end_line": 104,
+          "label": "retrieveCandidates(): one scan"
+        },
+        {
+          "path": "config/thresholds.json",
+          "line": 6,
+          "end_line": 6,
+          "label": "candidateLimit: all, not top-k"
+        },
+        {
+          "path": "src/pipeline/retrieval.ts",
+          "line": 85,
+          "end_line": 95,
+          "label": "cross-space vectors are excluded"
+        }
+      ]
+    },
+    {
+      "id": "resolve",
+      "type": "backend",
+      "label": "Three-way resolution",
+      "sublabel": "attach · ask a human · create new",
+      "pos": [
+        665,
+        400
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/pipeline/resolve.ts",
+          "line": 50,
+          "end_line": 86,
+          "label": "the verdict decides, not the cosine"
+        },
+        {
+          "path": "src/pipeline/resolve.ts",
+          "line": 47,
+          "end_line": 48,
+          "label": "T_auto applies to min(conf, cosine)"
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "AiProvider",
+      "sublabel": "one interface · four capabilities",
+      "pos": [
+        850,
+        215
+      ],
+      "size": [
+        175,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/ai/types.ts",
+          "line": 49,
+          "end_line": 55,
+          "label": "extract, embed, adjudicate, factors"
+        },
+        {
+          "path": "src/ai/index.ts",
+          "line": 11,
+          "end_line": 13,
+          "label": "replay or gemini, chosen by env"
+        },
+        {
+          "path": "src/ai/decisions.ts",
+          "line": 12,
+          "end_line": 40,
+          "label": "every call logged to ai_decisions"
+        }
+      ]
+    },
+    {
+      "id": "replay",
+      "type": "backend",
+      "label": "Replay provider",
+      "sublabel": "committed fixtures, keyed by input hash",
+      "pos": [
+        850,
+        400
+      ],
+      "size": [
+        175,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/ai/replay.ts",
+          "line": 32,
+          "end_line": 60,
+          "label": "serves recorded Gemini output"
+        },
+        {
+          "path": "src/ai/fixtures.ts",
+          "line": 33,
+          "end_line": 48,
+          "label": "loads fixtures/outputs.json"
+        },
+        {
+          "path": "src/ai/replay.ts",
+          "line": 98,
+          "end_line": 104,
+          "label": "unrecorded input: n-gram, degraded"
+        }
+      ]
+    },
+    {
+      "id": "gemini",
+      "type": "external",
+      "label": "Gemini API",
+      "sublabel": "opt-in with a key · 20 calls/day free",
+      "pos": [
+        1111,
+        215
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "sources": [
+        {
+          "path": "src/ai/gemini.ts",
+          "line": 44,
+          "end_line": 70,
+          "label": "createGeminiProvider()"
+        },
+        {
+          "path": "src/ai/gemini.ts",
+          "line": 25,
+          "end_line": 27,
+          "label": "untrusted text in a delimited block"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "SQLite via Drizzle",
+      "sublabel": "data/fis.db · 10 tables · history is append-only",
+      "pos": [
+        270,
+        590
+      ],
+      "size": [
+        560,
+        70
+      ],
+      "sources": [
+        {
+          "path": "src/db/index.ts",
+          "line": 14,
+          "end_line": 20,
+          "label": "WAL, foreign_keys ON per connection"
+        },
+        {
+          "path": "src/db/schema.ts",
+          "line": 269,
+          "end_line": 280,
+          "label": "the ten tables"
+        },
+        {
+          "path": "src/db/schema.ts",
+          "line": 236,
+          "end_line": 253,
+          "label": "score_runs: a re-score appends"
+        }
+      ]
+    },
+    {
+      "id": "scoring",
+      "type": "backend",
+      "label": "Scoring",
+      "sublabel": "separate run · off the intake path",
+      "pos": [
+        1080,
+        590
+      ],
+      "size": [
+        190,
+        70
+      ],
+      "sources": [
+        {
+          "path": "scripts/score.ts",
+          "line": 206,
+          "end_line": 213,
+          "label": "replays factor estimates, logged"
+        },
+        {
+          "path": "src/scoring/score.ts",
+          "line": 102,
+          "end_line": 125,
+          "label": "weighted sum, then a band"
+        },
+        {
+          "path": "config/weights.json",
+          "line": 4,
+          "end_line": 13,
+          "label": "weights are PM-owned, in git"
+        }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Next.js server — one process, no separate backend",
+      "wraps": [
+        "pages",
+        "actions",
+        "intakeRoute",
+        "pipeline",
+        "retrieval",
+        "resolve",
+        "provider",
+        "replay"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "Request text is untrusted — structured output only, never instruction",
+      "wraps": [
+        "intakeRoute",
+        "pipeline",
+        "provider"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browse",
+      "from": "reviewer",
+      "to": "pages",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "submit",
+      "from": "pages",
+      "to": "intakeRoute",
+      "label": "submit",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ingest",
+      "from": "pipeline",
+      "to": "provider",
+      "label": "3 model calls",
+      "variant": "emphasis"
+    },
+    {
+      "id": "run-pipeline",
+      "from": "intakeRoute",
+      "to": "pipeline",
+      "label": "ingest",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "replay-first",
+      "from": "provider",
+      "to": "replay",
+      "label": "no key: replay",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "gemini-optional",
+      "from": "provider",
+      "to": "gemini",
+      "label": "with a key",
+      "variant": "dashed"
+    },
+    {
+      "id": "forms",
+      "from": "pages",
+      "to": "actions",
+      "label": "form posts",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "recall",
+      "from": "pipeline",
+      "to": "retrieval",
+      "label": "query vector",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "decide",
+      "from": "pipeline",
+      "to": "resolve",
+      "label": "verdicts",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "read-problems",
+      "from": "retrieval",
+      "to": "db",
+      "label": "reads vectors",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "write-evidence",
+      "from": "resolve",
+      "to": "db",
+      "label": "writes evidence",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "write-actions",
+      "from": "actions",
+      "to": "db",
+      "label": "appends history",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "read-pages",
+      "from": "pages",
+      "to": "db",
+      "label": "reads",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left"
+    },
+    {
+      "id": "estimate",
+      "from": "scoring",
+      "to": "replay",
+      "label": "estimateFactors",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "via": [
+        [
+          1175,
+          520
+        ],
+        [
+          937.5,
+          520
+        ]
+      ]
+    },
+    {
+      "id": "write-runs",
+      "from": "scoring",
+      "to": "db",
+      "label": "appends score_runs",
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Where the model is — and is not",
+      "items": [
+        "Three model calls on the intake path: extract, embed, adjudicate.",
+        "Cosine, the weighted sum and every band are deterministic code.",
+        "The model proposes; only code writes to the database."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Keyless by default",
+      "items": [
+        "Real Gemini output was recorded once into committed fixtures and is replayed by input hash.",
+        "All 56 corpus inputs are covered, so a reviewer with no key sees genuine semantic matching.",
+        "Free-typed text outside the corpus falls back to n-grams and is labelled degraded in the UI.",
+        "Scoring records factor estimates through Gemini only when a key is set (scripts/score.ts:161), then reads every one of them back through replay."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Untrusted request text",
+      "items": [
+        "Every model call returns a Zod-validated object; free text cannot become control flow.",
+        "Request text goes in a delimited block, never concatenated into the instruction section.",
+        "A schema violation or unknown enum resolves to distinct — the non-destructive outcome.",
+        "body_raw is immutable and rendered escaped."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Two things that are not here",
+      "items": [
+        "No queue, no cache, no vector index: retrieval is one brute-force scan over all live problems, which is correct at this scale.",
+        "No separate backend. Server Components read SQLite directly and Server Actions write; the single HTTP route exists only because the intake stream needs NDJSON."
+      ]
+    }
+  ]
+}

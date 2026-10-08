@@ -1,0 +1,362 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "One intake submission — extract, embed, retrieve, adjudicate, resolve",
+    "output": "docs/diagrams/sequence.html",
+    "viewBox": [
+      1045,
+      672
+    ],
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "git@github.com:fablexis/feature-intelligence-system.git",
+      "link_mode": "local-only",
+      "revision": "7be509b12b3ec50fff28a18bbdc0df70df37b83d"
+    },
+    "views": [
+      {
+        "id": "happy",
+        "label": "The path that runs",
+        "focus": [
+          "submitter",
+          "route",
+          "pipeline",
+          "provider"
+        ],
+        "note": "Three model calls, two deterministic steps, one outcome."
+      },
+      {
+        "id": "degraded",
+        "label": "When no model answers",
+        "focus": [
+          "provider",
+          "pipeline"
+        ],
+        "note": "Both fallbacks end in a human looking, never in a silent merge."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "submitter",
+      "type": "external",
+      "label": "CSM",
+      "sublabel": "~60s of attention",
+      "sources": [
+        {
+          "path": "src/app/intake/intake-form.tsx",
+          "line": 84,
+          "end_line": 119,
+          "label": "submits, then reads each stage"
+        }
+      ]
+    },
+    {
+      "id": "route",
+      "type": "backend",
+      "label": "Intake route",
+      "sublabel": "POST /api/intake",
+      "sources": [
+        {
+          "path": "src/app/api/intake/route.ts",
+          "line": 32,
+          "end_line": 42,
+          "label": "stores the request before anything"
+        },
+        {
+          "path": "src/app/api/intake/route.ts",
+          "line": 45,
+          "end_line": 61,
+          "label": "streams NDJSON, stage by stage"
+        }
+      ]
+    },
+    {
+      "id": "pipeline",
+      "type": "backend",
+      "label": "Pipeline",
+      "sublabel": "stages 1-5",
+      "sources": [
+        {
+          "path": "src/pipeline/ingest.ts",
+          "line": 61,
+          "end_line": 135,
+          "label": "stages 1-5, in one function"
+        },
+        {
+          "path": "src/pipeline/resolve.ts",
+          "line": 50,
+          "end_line": 86,
+          "label": "resolve(): verdict first, then T_auto"
+        }
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "AiProvider",
+      "sublabel": "replay by default",
+      "sources": [
+        {
+          "path": "src/ai/types.ts",
+          "line": 49,
+          "end_line": 55,
+          "label": "the interface the pipeline calls"
+        },
+        {
+          "path": "src/ai/replay.ts",
+          "line": 32,
+          "end_line": 60,
+          "label": "replays recorded Gemini output"
+        }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "SQLite",
+      "sublabel": "requests · problems",
+      "sources": [
+        {
+          "path": "src/db/schema.ts",
+          "line": 94,
+          "end_line": 120,
+          "label": "evidence_links: needs_review, active"
+        },
+        {
+          "path": "src/db/schema.ts",
+          "line": 193,
+          "end_line": 214,
+          "label": "dedupe_suggestions keeps every verdict"
+        }
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "from": 246,
+      "to": 354,
+      "label": "Extract, then embed"
+    },
+    {
+      "from": 360,
+      "to": 464,
+      "label": "Retrieve, then adjudicate"
+    },
+    {
+      "from": 470,
+      "to": 549,
+      "label": "Resolve — exactly one outcome"
+    }
+  ],
+  "messages": [
+    {
+      "id": "submit",
+      "from": "submitter",
+      "to": "route",
+      "y": 174,
+      "label": "title + body, as written",
+      "variant": "security",
+      "note": "Untrusted from here on: validated by Zod, then only ever passed as data."
+    },
+    {
+      "id": "store-request",
+      "from": "route",
+      "to": "db",
+      "y": 202,
+      "label": "insert the request, verbatim",
+      "note": "Before any model call, so a failure later cannot lose it."
+    },
+    {
+      "id": "run",
+      "from": "route",
+      "to": "pipeline",
+      "y": 230,
+      "label": "ingestRequest()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "extract",
+      "from": "pipeline",
+      "to": "provider",
+      "y": 258,
+      "label": "extract the problem underneath",
+      "variant": "emphasis"
+    },
+    {
+      "id": "draft",
+      "from": "provider",
+      "to": "pipeline",
+      "y": 286,
+      "label": "job, workaround, blocked outcome",
+      "variant": "return",
+      "note": "Degraded: with no recorded output the raw text becomes the statement and confidence is 0, which sends it to a human."
+    },
+    {
+      "id": "embed",
+      "from": "pipeline",
+      "to": "provider",
+      "y": 314,
+      "label": "embed the canonical problem text",
+      "variant": "emphasis"
+    },
+    {
+      "id": "vector",
+      "from": "provider",
+      "to": "pipeline",
+      "y": 342,
+      "label": "768-dim vector",
+      "variant": "return",
+      "note": "Degraded: an n-gram vector instead. It lives in a different space, so nothing in the corpus is comparable to it."
+    },
+    {
+      "id": "read-vectors",
+      "from": "pipeline",
+      "to": "db",
+      "y": 370,
+      "label": "every live problem vector"
+    },
+    {
+      "id": "candidates",
+      "from": "db",
+      "to": "pipeline",
+      "y": 398,
+      "label": "ranked by cosine, no index",
+      "variant": "return",
+      "note": "One brute-force scan over all live problems. Candidates in another vector space are dropped and counted."
+    },
+    {
+      "id": "adjudicate",
+      "from": "pipeline",
+      "to": "provider",
+      "y": 426,
+      "label": "same, related or distinct?",
+      "variant": "emphasis"
+    },
+    {
+      "id": "verdicts",
+      "from": "provider",
+      "to": "pipeline",
+      "y": 454,
+      "label": "one verdict + reason per candidate",
+      "variant": "return",
+      "note": "Degraded: every candidate comes back distinct. Nothing merges on a guess."
+    },
+    {
+      "id": "auto-attach",
+      "from": "pipeline",
+      "to": "db",
+      "y": 482,
+      "label": "1 · same, score ≥ 0.80 → attach",
+      "variant": "emphasis",
+      "note": "The verdict forms the attachment; 0.80 only decides whether a human confirms it. The demo request lands here at 0.822."
+    },
+    {
+      "id": "ask-human",
+      "from": "pipeline",
+      "to": "db",
+      "y": 510,
+      "label": "2 · same, under 0.80 → attach + flag",
+      "note": "needs_review = true. It is attached, and the review queue owes it a look."
+    },
+    {
+      "id": "create-new",
+      "from": "pipeline",
+      "to": "db",
+      "y": 538,
+      "label": "3 · no same verdict → new problem",
+      "variant": "dashed",
+      "note": "Related candidates are recorded as links rather than being thrown away."
+    },
+    {
+      "id": "stream",
+      "from": "route",
+      "to": "submitter",
+      "y": 566,
+      "label": "NDJSON: stages, then outcome",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "route",
+      "from": 169,
+      "to": 572,
+      "type": "backend"
+    },
+    {
+      "participant": "pipeline",
+      "from": 225,
+      "to": 548,
+      "type": "backend"
+    },
+    {
+      "participant": "provider",
+      "from": 253,
+      "to": 292,
+      "type": "backend"
+    },
+    {
+      "participant": "provider",
+      "from": 309,
+      "to": 348,
+      "type": "backend"
+    },
+    {
+      "participant": "provider",
+      "from": 421,
+      "to": 460,
+      "type": "backend"
+    },
+    {
+      "participant": "db",
+      "from": 197,
+      "to": 208,
+      "type": "database"
+    },
+    {
+      "participant": "db",
+      "from": 365,
+      "to": 404,
+      "type": "database"
+    },
+    {
+      "participant": "db",
+      "from": 477,
+      "to": 544,
+      "type": "database"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "What decides the outcome",
+      "items": [
+        "The adjudicator's verdict decides identity. A same verdict forms the attachment; anything else creates a new problem.",
+        "The 0.80 threshold only decides whether a human confirms it, never whether the attach happens.",
+        "The score it is compared against is min(verdict confidence, cosine) — the weaker of two agreeing signals."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Both degraded branches end with a person",
+      "items": [
+        "No recorded extraction: the raw text stands in and confidence drops to 0, so the attach can never clear 0.80.",
+        "No recorded embedding: an n-gram vector, which shares no geometry with the corpus, so there is nothing to compare and the request becomes its own problem.",
+        "No recorded adjudication: every candidate returns distinct. A missing model never produces a merge.",
+        "Every one of those is labelled degraded in the UI rather than presented as a real match."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "What is not in this sequence",
+      "items": [
+        "The request row is written before the first model call, so a failure later in the pipeline can never lose what the customer wrote.",
+        "Scoring. Factor estimates are a separate run (npm run score) over problems that already exist, so no band is computed here.",
+        "Nothing is queued or cached. Two model calls and one database scan happen inline, inside the request.",
+        "Every candidate considered is stored, including the ones that lost, which is what makes the offline threshold sweep exact."
+      ]
+    }
+  ]
+}

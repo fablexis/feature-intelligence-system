@@ -398,3 +398,53 @@ Cut the live demo least, as instructed: 386 words down to 303, against 537 down 
 One honest adjustment to the brief's timings. The spoken text sums to 4:34, but the intake pipeline runs for several seconds with the script explicitly saying not to talk over it, so the take lands near 4:45 rather than at 4:34. The file says that out loud at the top instead of printing timestamps that only add up if the presenter never pauses. Section windows were set to the budgets given; the demo reads 2:01 against the ~2:00 asked, which I left rather than spend another twenty words of the one section that was supposed to be protected.
 
 No number changed, and I verified that rather than asserting it: re-ran `npm run demo:reset`, then queried the database for 55 requests, 23 problems, 11 in the queue, five requests on the general-ledger problem, data residency `now` / 3 accounts / $1,570,000 / customer value 1.00 / strategic fit 1.00, and notification scoping `no` / 4 accounts / $79,000 / strategic fit 0.10; re-ran the demo request through the live intake endpoint for 0.822 and 0.99; and traced 0.741/0.772, 0.974 → 1.000, 0.319 → 0.466, the pre-registered 0.60, the twenty-calls-a-day cap and 286-against-180 back to ADR 0002, eval-results, PRODUCT and the README. Database left canonical afterwards.
+
+=== 2026-10-08T02:30:00-05:00 ===
+PROMPT (verbatim):
+quiero que me hagas una propuesta de mejora de cada vista, el diseno actual no me gusta en lo absoluto
+
+RESPONSE:
+Leí las seis vistas, el shell y docs/DESIGN.md. Tras preguntar dirección (editorial cálida) y formato (Design System con maquetas), publiqué en el artefacto Design System: tokens en dos temas, brand book, una maqueta por vista (inicio, problemas, detalle, prioridad, revisión, nueva solicitud), componentes base y estados, y Vistas.md con diagnóstico y alcance por vista. No se tocó código de la app.
+
+[2026-10-08T03:13:11Z]
+PROMPT: ok, y en cuanto al layout de las paginas, con este diseno aplicado?
+RESPONSE: Propuesta de layout (barra lateral, rejillas, anchos) añadida al Design System.
+
+[2026-10-08T03:13:11Z]
+PROMPT: haz una propuesta, para mobile tambien
+RESPONSE: Pantallas móviles a 390 px con barra de pestañas inferior añadidas al Design System.
+
+[2026-10-08T03:13:11Z]
+PROMPT: siendo sincero, no me gusta el layout del app, se ve anticuado, viejo... quisiera algo mas dinamico, animaciones, etc, no me gusta como se ven las cards, ni el tamano de algunos botones y el texto, no me gusta la tipografia tampoco
+RESPONSE: Dirección "claro y vivo" (Plus Jakarta Sans + DM Sans, azul ultramar, tarjetas suaves, movimiento moderado) rehecha para las 6 vistas, base y móvil; Design System actualizado en su lugar.
+
+=== 2026-10-08T03:00:00Z ===
+PROMPT (verbatim):
+Add interactive architecture diagrams with the Archify skill, as a new extension (commit as "docs(E5): ..."). This is reference material for a reviewer, not a new product feature.
+
+1. Install the skill for Claude Code only, globally, and do not commit it into this repo:
+
+   npx -y skills add tt-a1i/archify --skill archify --agent claude-code --global --copy --yes
+
+   Then read the installed SKILL.md and follow it. If the skill is not available in this session after install, stop and say so. Do not hand-write HTML that imitates Archify.
+
+2. Add E5 to docs/TASKS.md before drawing anything: goal, acceptance criteria, status. Outside the 180-minute appetite.
+
+3. Read the implementation, not the plan-phase paths. docs/ARCHITECTURE.md still says lib/…; the code lives under src/ (src/pipeline/, src/ai/, src/scoring/, src/db/, src/problems/, retrieval inside src/pipeline/retrieval.ts). Also read adr/0001 through adr/0005. Diagram only what the code does.
+
+4. Produce exactly two diagrams, validated and delivered with Archify's own commands (showcase quality, deliver --json). Write the HTML to docs/diagrams/ and commit the JSON source beside each HTML file.
+
+   a. Architecture — source-backed, 8–12 components, one primary path, external dependencies, and the trust boundary. The shape is: browser → Next.js App Router pages → Server Actions (there is no separate API) → the intake pipeline → AiProvider, which is either replay over committed fixtures or Gemini → SQLite via Drizzle. Scoring is deterministic code over model-estimated factors and is off the intake path. Request text is untrusted input; the model proposes and code writes. Put file and line evidence on the nodes. Supporting detail goes in cards, not in extra edges.
+
+   b. Sequence — one intake submission, in order: extract, embed, retrieve (brute-force cosine, top 8), adjudicate, resolve. Show the two degraded branches (extract falls back to embedding the raw text; embed falls back to n-grams, and the UI says so) and the three outcomes (auto-attach, ask a human, create new). Formation follows the adjudicator's "same" verdict; the 0.80 threshold only decides whether a human confirms. Score is a later, separate call, not a step inside this sequence.
+
+5. Do not invent infrastructure. There is no Redis, no Postgres, no vector index, no queue, no separate backend service.
+
+6. Link both files from docs/ARCHITECTURE.md in one short paragraph, and add one line to the README pointing at them. Do not restate the architecture in either place.
+
+7. Open each HTML file and confirm it renders, the primary path highlights, and every evidence link resolves to a real file and line in this repo. Fix anything that does not.
+
+Update prompts.txt, then commit and push.
+
+RESPONSE:
+E5 done, ~70 min. Two Archify diagrams in docs/diagrams/, each with its JSON source beside the HTML, delivered at showcase quality with all four gates passing (schema, delivery, strict provenance, real-browser check). Architecture: 12 components, the intake path emphasised, Gemini as the one external dependency, and two boundaries (the Next.js process, and where untrusted request text is handled), with 29 file-and-line references pinned to 7be509b. Sequence: one intake submission with both degraded branches and all three outcomes, 9 references; `resolve` folded into the pipeline participant to fit the Reader's width budget. The prompt's "no separate API" was wrong about the code: intake streams through POST /api/intake (NDJSON per stage), and the diagram follows the code rather than the prompt. Also found that ARCHITECTURE.md's stage table says top k=8 while config/thresholds.json ships candidateLimit "all", now named in ARCHITECTURE.md. The skill's own installer timed out at 300s; cloned and installed from a local path, globally, and nothing of it is in the repo. Linked from ARCHITECTURE.md and the README. Claude Code hit its session limit after updating TASKS.md; the Cursor agent finished the run: checked the HTML for absolute paths and secrets (none), confirmed the pinned revision exists, wrote this entry, committed and pushed.
