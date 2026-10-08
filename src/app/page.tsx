@@ -20,26 +20,26 @@ const SCREENS = [
   {
     href: '/problems',
     label: 'Problems',
-    beat: 'Beat 1',
-    line: 'The corpus is not N asks — it is a set of shared problems, each backed by the verbatim requests that formed it.',
+    hint: 'start here',
+    line: 'Not a list of asks — a list of problems, each one showing the customer requests that make the case for it, in their own words.',
   },
   {
     href: '/priority',
     label: 'Priority',
-    beat: 'Beat 2',
-    line: 'Popularity and value point in opposite directions. Band and account count sit side by side so the trade is visible, not asserted.',
+    hint: 'for the roadmap meeting',
+    line: 'What to work on, and why. The number of accounts affected sits next to every band, so you can see where breadth and value disagree.',
   },
   {
     href: '/intake',
     label: 'New request',
-    beat: 'Beat 3',
-    line: 'The centerpiece. Type a request that shares no vocabulary with anything in the corpus and watch it find its problem anyway.',
+    hint: 'try it yourself',
+    line: 'File a request the way a CSM would. It tells you then and there whether this is already a known problem — even when nobody used the same words for it.',
   },
   {
     href: '/review',
     label: 'Review queue',
-    beat: 'ADR 0005',
-    line: 'Attaches below the auto threshold wait here for a human. Confirming and rejecting are both recorded.',
+    hint: 'needs a person',
+    line: 'Matches the system was not confident enough to make on its own. You confirm or reject; either way the decision is kept.',
   },
 ] as const;
 
@@ -70,20 +70,17 @@ export default async function Home() {
           ) : undefined
         }
       >
-        A feature request is not a unit of demand — it is a piece of evidence about demand. This
-        tool extracts the problem underneath each request, groups requests that share one however
-        differently they are worded, and ranks the problems with a decomposition a PM can argue
-        with.
+        A feature request is not a unit of demand — it is evidence about demand. This tool reads
+        what the customer actually described, groups the requests that share a problem however
+        differently they worded it, and ranks the problems in a way you can argue with rather than
+        have to trust.
       </PageHeader>
 
       {problems.length === 0 && (
-        <EmptyState
-          title="The database has no problems in it yet"
-          command={'npm run seed\nnpm run ingest\nnpm run score'}
-        >
-          Seeding loads accounts and raw requests only — deliberately, so the database never
-          contains the groupings the eval measures it on. The problems below exist because the
-          pipeline formed them.
+        <EmptyState title="Nothing here yet">
+          Loading the sample company puts 55 customer requests in, and nothing else — no groupings.
+          The problems you would see here are ones the system worked out for itself. The README has
+          the three setup steps.
         </EmptyState>
       )}
 
@@ -98,9 +95,7 @@ export default async function Home() {
                 <span className="font-medium underline-offset-4 group-hover:underline">
                   {screen.label}
                 </span>
-                <span className="text-muted-foreground text-xs tracking-wide uppercase">
-                  {screen.beat}
-                </span>
+                <span className="text-muted-foreground text-xs">{screen.hint}</span>
               </span>
               <span className="text-muted-foreground max-w-[70ch] text-sm leading-relaxed">
                 {screen.line}
@@ -110,13 +105,18 @@ export default async function Home() {
         ))}
       </ul>
 
+      {/* The honest-numbers note, in a PM's language. It stays on the front
+          door rather than in a footnote: a tool that reports its own miss rate
+          is the only kind a PM should trust with a merge. */}
       <p className="text-muted-foreground max-w-[70ch] text-sm leading-relaxed">
-        The honest numbers, up front: ground truth for the seeded corpus is 12 problems and the
-        pipeline forms 23, so it over-splits — measured recall{' '}
-        <span className="num font-mono">0.466</span>, auto-band precision{' '}
-        <span className="num font-mono">1.000</span>, zero false merges. Precision is the one that
-        matters, because a false merge hides demand invisibly. Full derivation in{' '}
-        <code className="font-mono text-xs">docs/eval-results.md</code>.
+        <strong className="text-foreground">What this gets wrong, up front.</strong> On this sample
+        company the right answer is 12 problems and the system found 23, so it splits some problems
+        that belong together — it catches a bit under half of the duplicates it should. What it does
+        not do is the expensive mistake: of the matches it made on its own, it got{' '}
+        <strong className="text-foreground">none wrong</strong>. That is the deliberate trade.
+        Wrongly merging two problems hides demand and nobody ever notices; leaving a duplicate
+        behind is visible and cheap to fix. Anything it is unsure about goes to the review queue
+        instead of being decided for you.
       </p>
     </AppShell>
   );

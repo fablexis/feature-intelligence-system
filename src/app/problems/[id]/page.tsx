@@ -37,15 +37,15 @@ export const instant = false;
 
 /** Short, stable keys from the Server Actions, turned into sentences here. */
 const NOTES: Record<string, string> = {
-  'support-added': 'Recorded — this account is now counted in evidence strength.',
-  'support-duplicate': 'Already recorded for that account. One click per account, by design.',
-  detached: 'Un-merged. The request is intact below and can be re-attached.',
-  'already-detached': 'That evidence was already detached.',
-  reattached: 'Re-attached.',
-  'already-attached': 'That evidence was already attached.',
-  confirmed: 'Confirmed — the attach stands and the flag is cleared.',
-  'already-confirmed': 'That attach was already confirmed.',
-  'unknown-link': 'That evidence link no longer exists.',
+  'support-added': 'Recorded — that account now counts towards this problem.',
+  'support-duplicate': 'Already recorded for that account. One per account, by design.',
+  detached: 'Removed from this problem. The request is intact below and can be put back.',
+  'already-detached': 'That one had already been removed.',
+  reattached: 'Put back.',
+  'already-attached': 'That one is already on this problem.',
+  confirmed: 'Confirmed — it stays on this problem.',
+  'already-confirmed': 'That one was already confirmed.',
+  'unknown-link': 'That request is no longer filed under this problem.',
   missing: 'Pick an account first.',
 };
 
@@ -108,18 +108,18 @@ export default async function ProblemPage({
           <span className="text-muted-foreground text-xs">
             {item.accountName ? `${item.accountName} · ${item.segment}` : 'internal · no account'}
           </span>
-          {/* Only while attached: the flag means "a human owes this a look",
-              and an un-merged link is one a human has already looked at. */}
+          {/* Only while attached: the flag means "a person owes this a look",
+              and a removed request is one a person has already looked at. */}
           {item.needsReview && attached && <Flag>needs review</Flag>}
           {item.createdBy === 'human' && (
-            <span className="text-muted-foreground text-xs">attached by a human</span>
+            <span className="text-muted-foreground text-xs">filed by a person, not matched</span>
           )}
         </div>
 
         {/* React escapes this by default — body_raw is untrusted. */}
         <p className="max-w-[70ch] text-sm leading-relaxed">{item.bodyRaw}</p>
 
-        {degradedRequests.has(item.requestId) && <DegradedNotice where="this attach" />}
+        {degradedRequests.has(item.requestId) && <DegradedNotice where="this match" />}
 
         {prov?.verdict && (
           <Provenance
@@ -131,8 +131,7 @@ export default async function ProblemPage({
         )}
         {!prov?.verdict && item.createdBy === 'ai' && (
           <p className="text-muted-foreground text-xs">
-            No adjudication on record — this request formed the problem rather than joining one, so
-            there was nothing to compare it against.
+            Nothing to compare against — this is the request the problem was first written from.
           </p>
         )}
 
@@ -151,7 +150,7 @@ export default async function ProblemPage({
           <input type="hidden" name="linkId" value={item.linkId} />
           <input type="hidden" name="problemId" value={id} />
           <Button type="submit" variant={attached ? 'destructive' : 'outline'} size="sm">
-            {attached ? 'Un-merge — this isn’t the same problem' : 'Re-attach'}
+            {attached ? 'Not the same problem — remove it' : 'Put it back'}
           </Button>
         </form>
       </li>
@@ -165,30 +164,26 @@ export default async function ProblemPage({
           title={problem.statement}
           metrics={
             <>
-              <Metric
-                label="distinct accounts"
-                value={stats.strength}
-                hint="never ARR-weighted"
-              />
-              <Metric label="attached requests" value={stats.requestCount} />
+              <Metric label="accounts affected" value={stats.strength} hint="counted once each" />
+              <Metric label="customer requests" value={stats.requestCount} />
               {stats.needsReview > 0 && (
-                <Metric label="flagged attaches" value={stats.needsReview} tone="flag" />
+                <Metric label="waiting on review" value={stats.needsReview} tone="flag" />
               )}
-              {stats.detached > 0 && <Metric label="un-merged" value={stats.detached} />}
+              {stats.detached > 0 && <Metric label="removed" value={stats.detached} />}
             </>
           }
         >
           <dl className="grid gap-1">
             <div>
-              <dt className="text-foreground inline font-medium">Job to be done:</dt>{' '}
+              <dt className="text-foreground inline font-medium">What they are trying to do:</dt>{' '}
               <dd className="inline">{problem.jobToBeDone}</dd>
             </div>
             <div>
-              <dt className="text-foreground inline font-medium">Workaround today:</dt>{' '}
+              <dt className="text-foreground inline font-medium">How they cope today:</dt>{' '}
               <dd className="inline">{problem.currentWorkaround}</dd>
             </div>
             <div>
-              <dt className="text-foreground inline font-medium">Blocked outcome:</dt>{' '}
+              <dt className="text-foreground inline font-medium">What it costs them:</dt>{' '}
               <dd className="inline">{problem.blockedOutcome}</dd>
             </div>
           </dl>
@@ -198,10 +193,11 @@ export default async function ProblemPage({
 
         {stats.needsReview > 0 && (
           <p className="text-sm">
-            {stats.needsReview} attach{stats.needsReview === 1 ? '' : 'es'} here landed below{' '}
-            <code className="font-mono text-xs">T_auto</code> and still owe a human a look.{' '}
+            {stats.needsReview} of these {stats.needsReview === 1 ? 'was' : 'were'} matched without
+            enough confidence to decide alone, so {stats.needsReview === 1 ? 'it is' : 'they are'}{' '}
+            waiting on a person.{' '}
             <Link href="/review" className="font-medium underline underline-offset-4">
-              Work the review queue
+              Go to the review queue
             </Link>
             .
           </p>
@@ -211,20 +207,20 @@ export default async function ProblemPage({
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-baseline justify-between gap-3 border-b pb-2">
           <h2 className="text-sm font-semibold tracking-wide uppercase">
-            Evidence · {active.length} attached
+            The case for it · {active.length} request{active.length === 1 ? '' : 's'}
           </h2>
           <p className="text-muted-foreground max-w-[60ch] text-xs">
-            {stats.writeInAccounts} account{stats.writeInAccounts === 1 ? '' : 's'} wrote in,{' '}
-            {stats.supportOnlyAccounts} clicked “this affects us too”. An account that did both
-            counts once. Every request below is verbatim; the statement above indexes these, it
-            never replaces them.
+            {stats.writeInAccounts} account{stats.writeInAccounts === 1 ? '' : 's'} wrote in and{' '}
+            {stats.supportOnlyAccounts} said “this affects us too”; an account that did both counts
+            once. Every request below is word for word as it arrived — the summary above points at
+            these, it never stands in for them.
           </p>
         </div>
 
         {active.length === 0 ? (
-          <EmptyState title="Nothing attached">
-            Every piece of evidence here has been un-merged. The text is intact below and one click
-            from being restored.
+          <EmptyState title="Nothing filed under this problem">
+            Every request has been moved off it. Their text is intact below and one click from
+            being put back.
           </EmptyState>
         ) : (
           <ul className="flex flex-col">{active.map((item) => renderEvidence(item, true))}</ul>
@@ -255,7 +251,7 @@ export default async function ProblemPage({
             This affects us too
           </Button>
           <p className="text-muted-foreground text-xs">
-            The vote attaches to the problem, never to a proposed solution. One click per account.
+            The vote lands on the problem, not on someone&rsquo;s proposed solution. One per account.
           </p>
         </form>
       </section>
@@ -264,11 +260,11 @@ export default async function ProblemPage({
         <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-baseline justify-between gap-3 border-b pb-2">
             <h2 className="text-muted-foreground text-sm font-semibold tracking-wide uppercase">
-              Un-merged · {detached.length}
+              Removed · {detached.length}
             </h2>
             <p className="text-muted-foreground max-w-[60ch] text-xs">
-              Un-merging flips a flag; it never deletes. Shown because a reversal nobody can see is
-              indistinguishable from a deletion.
+              Removing a request from a problem never deletes it. Shown here because an undo nobody
+              can see is indistinguishable from a deletion.
             </p>
           </div>
           <ul className="flex flex-col opacity-80">

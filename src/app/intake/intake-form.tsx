@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { DegradedNotice, Flag, Measure, Provenance } from '@/components/signals';
 
 const STAGES = [
-  { key: 'extract', label: 'Extracting the underlying problem' },
-  { key: 'embed', label: 'Embedding the problem statement' },
-  { key: 'retrieve', label: 'Searching existing problems' },
-  { key: 'adjudicate', label: 'Judging same / related / distinct' },
-  { key: 'resolve', label: 'Resolving' },
+  { key: 'extract', label: 'Reading what the problem underneath actually is' },
+  { key: 'embed', label: 'Turning it into something comparable by meaning' },
+  { key: 'retrieve', label: 'Searching the problems we already track' },
+  { key: 'adjudicate', label: 'Deciding: same problem, related, or new' },
+  { key: 'resolve', label: 'Filing it' },
 ] as const;
 
 type StageState = { ms: number; degraded: boolean; detail?: Record<string, unknown> };
@@ -55,17 +55,17 @@ const DEMO = {
 const OUTCOME = {
   auto: {
     frame: 'border-band-now/40 bg-band-next',
-    eyebrow: 'Joined an existing problem',
+    eyebrow: 'This is a problem we already track',
     tone: 'text-band-next-fg',
   },
   pending: {
     frame: 'border-flag-border bg-flag',
-    eyebrow: 'Joined an existing problem — pending confirmation',
+    eyebrow: 'Probably one we already track — a PM will confirm',
     tone: 'text-flag-fg',
   },
   create: {
     frame: 'border-border bg-muted/40',
-    eyebrow: 'Filed as a new problem',
+    eyebrow: 'This is new. Filed as its own problem',
     tone: 'text-foreground',
   },
 } as const;
@@ -110,8 +110,8 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
       if (!res.ok || !res.body) {
         setError(
           res.ok
-            ? 'The server returned no stream, so no stage could be shown.'
-            : `The intake endpoint refused this submission (HTTP ${res.status}).`,
+            ? 'The server accepted it but sent nothing back, so none of the steps could be shown.'
+            : `The server would not accept this submission (error ${res.status}).`,
         );
         setRunning(false);
         return;
@@ -143,7 +143,7 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'the request never reached the pipeline');
+      setError(err instanceof Error ? err.message : 'the request never reached the server');
     }
     setRunning(false);
   }
@@ -156,14 +156,9 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
 
   return (
     <div className="flex flex-col gap-6">
+      {/* No heading and no blurb: the page header above says what this is,
+          and saying it twice costs a 60-second submitter their first field. */}
       <div className="flex flex-col gap-3 rounded-xl border p-5">
-        <div className="flex flex-col gap-1">
-          <h2 className="font-medium">Submit a request</h2>
-          <p className="text-muted-foreground max-w-[70ch] text-sm leading-relaxed">
-            The problem underneath gets extracted before anything is stored, so a duplicate is
-            caught at the one moment deduplication is free: before the record exists.
-          </p>
-        </div>
         <label htmlFor="title" className="text-xs font-medium">
           Title
         </label>
@@ -180,7 +175,7 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
         <textarea
           id="body"
           className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring/50 min-h-24 rounded-md border px-3 py-2 text-sm leading-relaxed focus-visible:ring-3 focus-visible:outline-none"
-          placeholder="Solution-shaped is fine — the extractor is what turns it back into a problem"
+          placeholder="Ask for a feature if that is how they put it — it reads past the wording to the problem"
           value={bodyRaw}
           onChange={(e) => setBodyRaw(e.target.value)}
         />
@@ -244,10 +239,10 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
 
       {(running || done) && (
         <div className="flex flex-col gap-2 rounded-xl border p-5">
-          <h2 className="text-sm font-semibold tracking-wide uppercase">Pipeline</h2>
+          <h2 className="text-sm font-semibold tracking-wide uppercase">What it is doing</h2>
           <p className="text-muted-foreground text-xs">
-            Each stage appears as it finishes, not at the end — a 7-second pipeline behind one
-            spinner reads as a hang.
+            Each step shows as it finishes rather than all at the end, so a few seconds of work
+            does not read as a hang.
           </p>
           <ol className="mt-1 flex flex-col">
             {STAGES.map((stage) => {
@@ -293,10 +288,10 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
 
       {error && (
         <div className="border-destructive/40 bg-destructive/5 flex flex-col gap-1 rounded-xl border p-5">
-          <p className="text-destructive text-sm font-semibold">Intake failed mid-pipeline</p>
+          <p className="text-destructive text-sm font-semibold">Something broke partway through</p>
           <p className="max-w-[70ch] text-sm leading-relaxed">
-            {error} <strong>The request was still stored</strong> — nothing is ever dropped. It
-            simply has no problem attached yet, and re-running intake will resolve it.
+            {error} <strong>Your request was still saved</strong> — nothing is ever dropped. It just
+            has not been filed against a problem yet, and will be when this runs again.
           </p>
         </div>
       )}
@@ -309,11 +304,11 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
               {kind === 'pending' && <Flag>needs review</Flag>}
             </div>
             <p className={`text-xs ${style.tone} opacity-90`}>
-              <span className="num font-mono">{done.candidateCount}</span> existing problem
-              {done.candidateCount === 1 ? '' : 's'} compared
-              {kind === 'pending' &&
-                ' · below T_auto, so it is attached but a PM still owes it a look'}
-              {kind === 'auto' && ' · above T_auto, so no human was asked'}
+              Checked against{' '}
+              <span className="num font-mono">{done.candidateCount}</span> problem
+              {done.candidateCount === 1 ? '' : 's'} we already track
+              {kind === 'pending' && ' · filed there, but not confidently enough to decide alone'}
+              {kind === 'auto' && ' · confident enough to file it without asking anyone'}
             </p>
           </div>
 
@@ -323,7 +318,7 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
             <div className="bg-background flex flex-col gap-1 rounded-md border p-3">
               <span className="font-medium">{done.problem.statement}</span>
               <span className="text-muted-foreground text-sm">
-                Workaround today: {done.problem.currentWorkaround}
+                How customers cope with it today: {done.problem.currentWorkaround}
               </span>
             </div>
           )}
@@ -333,14 +328,14 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
               verdict="same"
               confidence={outcome.confidence}
               similarity={outcome.score}
-              similarityLabel="attach score"
+              similarityLabel="match score"
               rationale={outcome.rationale}
             />
           )}
 
           <div className="flex flex-wrap gap-2">
             <Button size="lg" onClick={() => router.push(`/problems/${outcome.problemId}`)}>
-              See the problem and its evidence
+              See the problem and who else raised it
             </Button>
             {outcome.kind === 'attach' && (
               <form action="/api/intake/split" method="post">
@@ -353,9 +348,9 @@ export function IntakeForm({ accounts }: { accounts: Array<{ id: string; name: s
           </div>
           {outcome.kind === 'attach' && (
             <p className={`max-w-[70ch] text-xs leading-relaxed ${style.tone} opacity-90`}>
-              That second button is load-bearing, not a courtesy: a false merge is expensive
-              precisely because it is invisible, and this is what makes it self-reporting. It
-              un-merges and records the disagreement rather than burying it.
+              That second button matters more than it looks. If this match is wrong, the only person
+              who can tell is you — so saying so takes one click, files your request on its own, and
+              puts the disagreement on record instead of losing it.
             </p>
           )}
         </div>

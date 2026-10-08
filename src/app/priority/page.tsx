@@ -48,17 +48,17 @@ import {
 export const instant = false;
 
 const NOTES: Record<string, string> = {
-  'override-recorded': 'Override recorded with its reason. The suggested band is kept alongside it.',
-  'override-needs-reason': 'An override needs a reason. Nothing was recorded.',
+  'override-recorded': 'Recorded, with your reason. The original band is kept alongside it.',
+  'override-needs-reason': 'A band change needs a reason. Nothing was recorded.',
   'override-same-band': 'That is already the band. Nothing was recorded.',
-  'override-invalid': 'Could not record that override.',
+  'override-invalid': 'Could not record that change.',
 };
 
 const BAND_CAPTION: Record<Band, string> = {
   now: 'Worth starting against everything else on this list',
-  next: 'Queued behind the now band',
-  later: 'Real, and not now',
-  no: 'Not worth doing — recorded so it stops being re-litigated',
+  next: 'Real candidates, queued behind the now band',
+  later: 'Worth doing, not worth doing yet',
+  no: 'Not worth doing — written down so it stops coming back every quarter',
 };
 
 const usd = (n: number) =>
@@ -125,15 +125,15 @@ export default async function PriorityPage({
             {bandCounts.map(({ band, rows: group }) => (
               <Metric key={band} label={band} value={group.length} />
             ))}
-            {unscored.length > 0 && <Metric label="unscored" value={unscored.length} />}
-            <Metric label="weights" value={weights.version} hint="PM-owned, in version control" />
+            {unscored.length > 0 && <Metric label="not scored" value={unscored.length} />}
+            <Metric label="weighting" value={weights.version} hint="yours, not the model's" />
           </>
         }
       >
-        {scoredCount} of {rows.length} problems scored. Each band is a weighted sum of four
-        estimated factors — <strong>no model call happens at render time</strong>, so changing a
-        weight re-bands everything immediately. The distinct-account count sits beside every band on
-        purpose: the useful rows are the ones where breadth and value disagree.
+        Every band here is arithmetic over four scored factors, and you own the weights that turn
+        them into a band. The number of accounts affected sits beside every band on purpose: the
+        rows worth arguing about are the ones where breadth and value disagree, and the top of this
+        board is one of them.
       </PageHeader>
 
       {note && NOTES[note] && <Note>{NOTES[note]}</Note>}
@@ -143,7 +143,7 @@ export default async function PriorityPage({
           nobody can argue with. */}
       <details className="rounded-lg border px-4 py-3">
         <summary className="flex cursor-pointer flex-wrap items-center gap-2 text-sm">
-          <span className="font-medium">Weights {weights.version}</span>
+          <span className="font-medium">Weighting {weights.version}</span>
           {Object.entries(weights.weights).map(([key, value]) => (
             <span key={key} className="text-muted-foreground num text-xs">
               {FACTOR_LABELS[key as keyof typeof FACTOR_LABELS]} ×{' '}
@@ -157,8 +157,10 @@ export default async function PriorityPage({
           </span>
         </summary>
         <p className="text-muted-foreground mt-3 max-w-[70ch] text-sm leading-relaxed">
-          They live in <code className="font-mono">{WEIGHTS_PATH}</code> rather than in this UI so
-          they stay version-controlled and diffable (D6).
+          The weights are a judgement about what matters to this company, so they are not something
+          the model gets to decide. They live in a file you edit and your team can see the history
+          of (<code className="font-mono">{WEIGHTS_PATH}</code>) rather than behind a settings
+          screen — change a number and every band here moves immediately.
         </p>
         <pre className="bg-muted mt-2 overflow-x-auto rounded-md p-3 font-mono text-xs">
           {weightsFile}
@@ -166,20 +168,17 @@ export default async function PriorityPage({
       </details>
 
       {rows.length === 0 && (
-        <EmptyState
-          title="Nothing to rank yet"
-          command={'npm run seed\nnpm run ingest\nnpm run score'}
-        >
-          The board ranks problems the pipeline formed, and seeding deliberately creates none. Form
-          them, then estimate the factors.
+        <EmptyState title="Nothing to rank yet">
+          This board ranks the problems the system has worked out, and the sample company starts
+          with none of them. The README has the setup steps.
         </EmptyState>
       )}
 
       {rows.length > 0 && scoredCount === 0 && (
-        <EmptyState title="Formed, but never scored" command="npm run score">
-          Every problem reads <code className="font-mono">unscored</code> because no factor estimate
-          exists. The band is withheld rather than guessed — an unscored problem is not a{' '}
-          <code className="font-mono">no</code>.
+        <EmptyState title="The problems exist, but none are scored">
+          Nothing has estimated the four factors yet, so no band can be worked out. They read{' '}
+          <em>unscored</em> rather than being guessed at — an unscored problem is not the same as a
+          rejected one. The README has the setup steps.
         </EmptyState>
       )}
 
@@ -192,7 +191,7 @@ export default async function PriorityPage({
                 {band ?? 'unscored'} · {group.length}
               </h2>
               <p className="text-muted-foreground text-xs">
-                {band ? BAND_CAPTION[band] : 'No factor estimate recorded'}
+                {band ? BAND_CAPTION[band] : 'Not scored yet'}
               </p>
             </div>
 
@@ -240,7 +239,7 @@ export default async function PriorityPage({
                         )}
                         {override && (
                           <span className="text-muted-foreground text-xs">
-                            overridden by {override.actor}
+                            band changed by {override.actor}
                           </span>
                         )}
                       </div>
@@ -249,15 +248,16 @@ export default async function PriorityPage({
 
                   {!run && (
                     <p className="text-muted-foreground border-t px-4 py-3 text-sm">
-                      No factor estimate recorded. Run <code className="font-mono">npm run score</code>
-                      . The band is withheld rather than guessed.
+                      Not scored yet, so there is no band to show. Withheld rather than guessed — an
+                      unscored problem is not a rejected one.
                     </p>
                   )}
 
                   {run && scored && (
                     <details className="border-t">
                       <summary className="text-muted-foreground hover:bg-muted/50 cursor-pointer px-4 py-2.5 text-sm transition-colors">
-                        Why this band — four factors, their citations, and the override
+                        Why this band — the four factors, what each one is based on, and how to
+                        disagree
                       </summary>
                       <div className="flex flex-col gap-4 px-4 pt-1 pb-4">
                         <div className="flex flex-col">
@@ -277,16 +277,16 @@ export default async function PriorityPage({
                                 </p>
                                 <p className="text-muted-foreground mt-1 text-xs">
                                   {factor.citations.length === 0 ? (
-                                    <span>No citation — shown as unsupported.</span>
+                                    <span>Nothing cited — treat this one as unsupported.</span>
                                   ) : (
                                     <>
-                                      Cites:{' '}
+                                      Based on:{' '}
                                       {factor.citations
                                         .map((id) => {
                                           const cited = citations.get(id);
                                           return cited
                                             ? `${cited.title}${cited.accountName ? ` (${cited.accountName})` : ''}`
-                                            : `${id} — no longer attached`;
+                                            : `${id} — no longer on this problem`;
                                         })
                                         .join(' · ')}
                                     </>
@@ -298,52 +298,47 @@ export default async function PriorityPage({
                         </div>
 
                         <p className="max-w-[70ch] text-sm leading-relaxed">
-                          Weighted sum{' '}
+                          Adds up to{' '}
                           <strong className="num font-mono">
                             {scored.contributions.map((c) => c.contribution.toFixed(3)).join(' + ')}{' '}
                             = {scored.raw.toFixed(3)}
-                          </strong>{' '}
-                          → band <strong>{scored.band}</strong>. The raw number orders problems
-                          inside a band; the band is the output, because 0.71 against 0.69 is noise.
+                          </strong>
+                          , which lands in <strong>{scored.band}</strong>. The total only orders
+                          problems within a band — the band is the answer, because 0.71 against 0.69
+                          is noise dressed up as a decision.
                         </p>
 
                         {run.factors.tension && (
                           <p className="bg-muted/60 max-w-[70ch] rounded-md px-3 py-2 text-sm leading-relaxed">
-                            <strong>Tension:</strong> {run.factors.tension}
+                            <strong>The argument against:</strong> {run.factors.tension}
                           </p>
                         )}
 
                         <p className="text-muted-foreground max-w-[70ch] text-xs leading-relaxed">
-                          Estimated by{' '}
-                          <code className="font-mono">{model?.modelId ?? run.modelId}</code>
-                          {model && ` via ${model.provider}`}
-                          {model?.promptVersion && (
-                            <>
-                              {' '}
-                              on prompt <code className="font-mono">{model.promptVersion}</code>
-                            </>
-                          )}
-                          , under weights <code className="font-mono">{run.weightsVersion}</code>
+                          The four scores above were estimated by{' '}
+                          <code className="font-mono">{model?.modelId ?? run.modelId}</code> under
+                          weighting <code className="font-mono">{run.weightsVersion}</code>
                           {run.weightsVersion !== weights.version && (
                             <>
                               {' '}
                               and re-banded here under{' '}
-                              <code className="font-mono">{weights.version}</code> — arithmetic
-                              only, no re-estimation
+                              <code className="font-mono">{weights.version}</code>, which is
+                              arithmetic over the same estimates rather than a fresh opinion
                             </>
                           )}
-                          . {runCount} score run{runCount === 1 ? '' : 's'} on record; the factors
-                          are estimates and nothing in this build measures their quality.
+                          . Scored {runCount} time{runCount === 1 ? '' : 's'}, every version kept.
+                          They are estimates, and nothing here measures how good they are — which is
+                          why the weighting is yours and every band can be changed.
                         </p>
 
                         {override && (
                           <p className="bg-muted/60 max-w-[70ch] rounded-md px-3 py-2 text-sm leading-relaxed">
-                            <strong>Overridden:</strong>{' '}
+                            <strong>Band changed by hand:</strong>{' '}
                             <span className="num font-mono">
                               {override.suggested} → {override.final}
                             </span>
-                            . {override.reason} — <em>{override.actor}</em>. The suggested band is
-                            retained; nothing was overwritten.
+                            . {override.reason} — <em>{override.actor}</em>. The original band is
+                            kept alongside it; nothing was overwritten.
                           </p>
                         )}
 
@@ -357,7 +352,7 @@ export default async function PriorityPage({
                           <input type="hidden" name="suggested" value={effective ?? scored.band} />
                           <div className="flex flex-col gap-1">
                             <label htmlFor={`band-${problem.id}`} className="text-xs font-medium">
-                              Override band
+                              Change the band
                             </label>
                             <select
                               id={`band-${problem.id}`}
@@ -381,12 +376,12 @@ export default async function PriorityPage({
                               name="reason"
                               required
                               minLength={3}
-                              placeholder="Why the score is wrong here"
+                              placeholder="Why this is the wrong call"
                               className="border-input bg-background placeholder:text-muted-foreground focus-visible:ring-ring/50 h-9 w-full rounded-md border px-2 text-sm focus-visible:ring-3 focus-visible:outline-none"
                             />
                           </div>
                           <Button type="submit" variant="outline" size="lg">
-                            Override
+                            Save the change
                           </Button>
                         </form>
                       </div>

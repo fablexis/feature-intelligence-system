@@ -124,30 +124,23 @@ export function Metric({
 }
 
 /**
- * Empty states name the command that fills them. A reviewer following README on
- * a fresh clone meets these before anything else, and "nothing here" would
- * leave them guessing whether the build is broken or the database is empty.
+ * Empty states say, in the product's own language, why a screen is empty and
+ * what would fill it — never "nothing here", which leaves a reader guessing
+ * whether the build is broken or the data has not been loaded.
+ *
+ * They used to print the shell commands. They no longer do: these are PM-facing
+ * screens, and the setup steps belong in the README, where someone running the
+ * project is already looking. The one exception is `app/error.tsx`, which is a
+ * crash screen for whoever is running it locally, and there the exact command
+ * *is* the kindest thing to show.
  */
-export function EmptyState({
-  title,
-  children,
-  command,
-}: {
-  title: string;
-  children: ReactNode;
-  command?: string;
-}) {
+export function EmptyState({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="rounded-xl border border-dashed px-6 py-10 text-center">
       <p className="font-medium">{title}</p>
       <p className="text-muted-foreground mx-auto mt-1.5 max-w-[55ch] text-sm leading-relaxed">
         {children}
       </p>
-      {command && (
-        <pre className="bg-muted mx-auto mt-4 w-fit rounded-md px-3 py-2 font-mono text-xs">
-          {command}
-        </pre>
-      )}
     </div>
   );
 }

@@ -11,9 +11,9 @@ export default function NotFound() {
     <main className="mx-auto flex max-w-2xl flex-col gap-4 px-6 py-16">
       <h1 className="text-xl font-semibold tracking-tight">No such problem</h1>
       <p className="text-muted-foreground max-w-[70ch] text-sm leading-relaxed">
-        Problem ids are derived from the request that formed them, so re-running{' '}
-        <code className="font-mono">npm run ingest</code> rebuilds the set and retires the old ids.
-        Nothing was deleted — the requests behind it are intact and have been re-grouped.
+        This link points at a problem that no longer exists under that name. Nothing was deleted —
+        when the system re-reads every request it regroups them from scratch, so the problems
+        are rebuilt and the old links retire. The customer requests behind it are all still there.
       </p>
       <div className="flex gap-2">
         <Link

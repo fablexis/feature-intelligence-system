@@ -61,28 +61,23 @@ export default async function ProblemsPage() {
         title="Problems"
         metrics={
           <>
-            <Metric label="problems formed" value={ranked.length} hint="ground truth is 12" />
-            <Metric label="requests attached" value={totals.requests} />
-            <Metric label="flagged attaches" value={totals.needsReview} tone="flag" />
+            <Metric label="problems" value={ranked.length} hint="the right answer is 12" />
+            <Metric label="customer requests behind them" value={totals.requests} />
+            <Metric label="waiting on review" value={totals.needsReview} tone="flag" />
           </>
         }
       >
-        Formed by the intake pipeline from raw text — nobody labelled these. Ordered by distinct
-        accounts affected, which is breadth, not priority. Ground truth for this corpus is 12
-        problems, so the pipeline still over-splits: measured recall is{' '}
-        <span className="num font-mono">0.466</span> (
-        <code className="font-mono text-xs">docs/eval-results.md</code>), and the gap is visible
-        below as several small problems that are really one.
+        Worked out from the raw requests — nobody sorted these by hand. Ordered by how many
+        accounts are affected, which is breadth, not priority; the priority board is where value
+        comes in. On this sample company the right answer is 12 problems rather than 23, and you
+        can see the gap below: several of these are the same problem stated two different ways.
       </PageHeader>
 
       {ranked.length === 0 ? (
-        <EmptyState
-          title="No problems yet"
-          command={'npm run seed\nnpm run ingest\nnpm run score'}
-        >
-          Seeding loads accounts and raw requests only — the database never contains the groupings
-          it is measured on, so this list is empty until the pipeline forms them. You can also
-          submit a request and watch one form.
+        <EmptyState title="No problems yet">
+          The sample company loads 55 customer requests and no groupings, so this list stays empty
+          until the system has read them — the README has the setup steps. You can also file a
+          request yourself and watch the first problem appear.
         </EmptyState>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -107,9 +102,9 @@ export default async function ProblemsPage() {
                       {s.requestCount} request{s.requestCount === 1 ? '' : 's'}
                     </span>
                     {s.supportOnlyAccounts > 0 && (
-                      <span className="num">{s.supportOnlyAccounts} clicked</span>
+                      <span className="num">{s.supportOnlyAccounts} said “us too”</span>
                     )}
-                    {s.detached > 0 && <span className="num">{s.detached} detached</span>}
+                    {s.detached > 0 && <span className="num">{s.detached} removed</span>}
                     {s.needsReview > 0 && (
                       <Flag>
                         {s.needsReview} need{s.needsReview === 1 ? 's' : ''} review

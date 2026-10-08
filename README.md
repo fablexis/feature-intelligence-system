@@ -4,7 +4,33 @@ Turns unstructured feature requests into **evidence about problems**, not votes 
 
 Runs with **no API key** — the keyless path replays real recorded Gemini output, so the semantic
 matching a reviewer sees is genuine. → [**Setup**](#setup) · [Demo script](docs/DEMO.md) ·
-[Measurements](docs/eval-results.md)
+[Loom script](docs/LOOM_SCRIPT.md) · [Measurements](docs/eval-results.md)
+
+---
+
+## The 60-second version
+
+- **Thesis.** A feature request is not a unit of demand, it is *evidence* about demand. Vote counts
+  measure the popularity of a **wording**, so one problem raised 40 times in 40 wordings loses to
+  one raised 12 times consistently.
+- **Centerpiece.** Duplicate resolution at **intake**, on the AI-extracted underlying problem
+  rather than the words — before the record exists, the one moment deduplication is free.
+- **Why AI is load-bearing.** "Add CSV export" and "finance can't get the numbers into Excel" share
+  **zero** content words. Keyword, trigram and tag search return nothing on exactly the half that
+  matters. Deterministic code still does every arithmetic step.
+- **Measured, not asserted.** On a 55-request labelled corpus: precision **1.000** (zero false
+  merges) and recall **0.466** against a pre-registered target of 0.60 — the miss is reported, not
+  buried. Rewriting the adjudication prompt (**v1 → v2**) took recall 0.319 → **0.466**, precision
+  0.974 → **1.000**, planted disjoint pairs caught 6/11 → **8/11**, and problems formed 31 → **23**
+  against a truth of 12.
+- **The trade is deliberate.** A false merge hides demand undetectably; a false split is visible and
+  cheap. So precision is bought with recall, and the uncertain band goes to a human in `/review`.
+- **Try it in one command:** `npm install && npm run demo:reset && npm run dev` — no key, no
+  network, no cost.
+- **Honest on time.** Implementation ran **~286 min against a 180-min appetite** (~345 against a
+  ~4h cap), every task's planned-vs-actual and deviation recorded in
+  [`docs/TASKS.md`](docs/TASKS.md) and every prompt in
+  [`prompts.txt`](prompts.txt).
 
 ---
 
@@ -85,10 +111,13 @@ Four beats, ~5 minutes, scripted with the real numbers in [`docs/DEMO.md`](docs/
    different vocabularies. Nobody labelled these.
 2. **`/priority`** — popularity and value point in opposite directions. EU data residency bands
    `now` at **#1 of 23** on *three* accounts; notification scoping bands `no` at **#19** on
-   *four*. The decomposition says why: `strategic_fit` 1.00 against 0.10.
+   *four*. The decomposition says why: `strategic_fit` 1.00 against 0.10. Band cut points were
+   re-picked in `w2` so `now` holds the top **4** rather than 10 — a band 10 problems wide is not a
+   prioritisation.
 3. **`/intake`** — type a request yourself. It auto-attaches to the right problem at cosine
-   **0.822**, verdict `same`, confidence **0.99** — sharing **zero content words** with any of the
-   seven requests already on it. Every lexical method returns nothing here.
+   **0.822**, verdict `same`, confidence **0.99** — sharing **zero content words** with the five
+   requests on it, or with any of the seven in its labelled cluster. Every lexical method returns
+   nothing here.
 4. **`npm run eval`** — 8 of 11 planted disjoint pairs caught; 0 of 3 adjacent pairs wrongly
    merged; auto-band precision **1.000**.
 
@@ -609,6 +638,7 @@ cap**, and both the overrun and its causes are below rather than rounded away.
 | **C8** instrumentation + README | 5 min | **~40 min** | ↑↑ found and fixed the fresh-clone path |
 | **Implementation subtotal** | **180 min** | **~286 min** | **+59%** |
 | **Total incl. spec + plan** | **~240 min (the ~4h cap)** | **~345 min** | **~1h45m over** |
+| **E1** review queue, AI provenance, projected board, states | — *(extension, outside the appetite)* | ~95 min | ↑ two of the four items needed a mutation and a new read module, not polish |
 
 **Why it overran, specifically.** Three tasks account for all of it, and they overran for one
 reason: **a measurement replaced an assumption, and the measurement was worth more than the
@@ -653,6 +683,16 @@ native module but ships prebuilds, so there is nothing to compile.
 
 ```bash
 npm install
+npm run demo:reset      # migrate → seed → ingest → score, then asserts the expected counts
+npm run dev             # http://localhost:3000
+```
+
+`demo:reset` is also how you get back to this exact state after clicking around
+— it clears the tables **in place**, so it is safe to run with `npm run dev` already up. The long
+form is identical and worth running once to watch each step report for itself:
+
+```bash
+npm install
 npm run db:migrate      # creates ./data/fis.db — 10 tables
 npm run seed            # 22 accounts, 55 requests, 0 problems (idempotent)
 npm run verify:replay   # proves the keyless path: 56/56 real recorded outputs, 0 degraded
@@ -671,7 +711,7 @@ Expected output, which also tells you nothing is silently degrading:
 |---|---|
 | `verify:replay` | `real extractions: 56/56` · `real embeddings: 56/56` · `deterministic: yes` |
 | `ingest` | `problems formed: 23` · `attached as evidence: 32 (11 flagged)` · `degraded: 0` |
-| `score` | `score_runs written: 23` · `bands: now 10 · next 2 · later 4 · no 7` |
+| `score` | `score_runs written: 23` · `bands: now 4 · next 8 · later 4 · no 7` (under weights `w2`) |
 | `eval` *(optional)* | `precision 1.000 / recall 0.466` · `hard floor … PASS` |
 
 Then follow [`docs/DEMO.md`](docs/DEMO.md). A **non-zero `degraded` count anywhere means stale
@@ -720,6 +760,7 @@ by hash, so a run stopped by a daily cap resumes for free.
 | `npm run verify:replay` | asserts the keyless path serves real recorded output for all 56 inputs; exits non-zero otherwise | no |
 | `npm run record` | re-record extract + embed fixtures. **Run `-- --dry-run` first.** `-- --stage=<extract\|embed>` | **yes** |
 | `npm run record:demo` | record the one scripted demo request's adjudication | **yes** |
+| `npm run demo:reset` | one command back to the canonical demo state — clears every table **in place** and replays migrate → seed → ingest → score, then asserts the expected counts. Safe to run with `npm run dev` already up; it deliberately does not delete the database file, because a long-lived SQLite connection would keep writing to the unlinked one | no |
 
 ### Layout
 

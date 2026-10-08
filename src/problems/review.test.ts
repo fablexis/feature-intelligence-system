@@ -159,7 +159,9 @@ describe('provenance pairs the verdict with what a human changed', () => {
     expect(prov?.rationale).toBe('both describe the same underlying problem');
     // Append-only: the confirmation survives the later rejection.
     expect(prov?.changes.map((c) => c.field)).toEqual(['needs_review', 'active']);
-    expect(prov?.changes[1].reason).toContain('review-queue');
+    // The stored reason names where the decision happened, as a sentence a PM
+    // reads back rather than a key.
+    expect(prov?.changes[1].reason).toContain('rejected in the review queue');
   });
 
   it('has an entry for every link, including one the model never judged', () => {

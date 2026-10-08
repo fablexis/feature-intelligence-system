@@ -62,6 +62,13 @@ const VERDICT_CLASS: Record<string, string> = {
   distinct: 'bg-muted text-muted-foreground',
 };
 
+/** The stored enum, said the way a PM would say it. */
+const VERDICT_LABEL: Record<string, string> = {
+  same: 'the same problem',
+  related: 'related, but not the same',
+  distinct: 'a different problem',
+};
+
 /**
  * What the AI said, next to the verbatim request it said it about.
  *
@@ -75,7 +82,7 @@ export function Provenance({
   verdict,
   confidence,
   similarity,
-  similarityLabel = 'cosine',
+  similarityLabel = 'text similarity',
   rationale,
   promptVersion,
   modelId,
@@ -83,7 +90,7 @@ export function Provenance({
   verdict: string | null;
   confidence: number | null;
   similarity: number | null;
-  /** `cosine` on stored suggestions; the attach score at intake is a `min`. */
+  /** Plain-language name for the number; the one at intake is a different scalar. */
   similarityLabel?: string;
   rationale: string | null;
   promptVersion?: string | null;
@@ -93,7 +100,7 @@ export function Provenance({
     <div className="bg-muted/40 border-border flex flex-col gap-1.5 rounded-md border px-3 py-2">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          AI verdict
+          What the AI concluded
         </span>
         {verdict && (
           <span
@@ -101,7 +108,7 @@ export function Provenance({
               VERDICT_CLASS[verdict] ?? 'bg-muted text-muted-foreground'
             }`}
           >
-            {verdict}
+            {VERDICT_LABEL[verdict] ?? verdict}
           </span>
         )}
         {confidence !== null && <Measure label="confidence" value={confidence.toFixed(2)} />}
@@ -120,11 +127,21 @@ export function Provenance({
 }
 
 /**
- * What a human changed, in the same place as what the AI proposed.
+ * The database stores a column name and a boolean; a PM needs the sentence.
  *
- * `human_overrides` is append-only (M3): suggested and final are both retained,
- * so this renders both rather than only the value in force.
+ * `human_overrides` is append-only (M3) and keeps both the old and the new
+ * value, so where a plain outcome reads better ("removed from this problem")
+ * that is what is shown; where the before matters — a band moved from one
+ * rung to another — both are rendered.
  */
+const OUTCOME: Record<string, string> = {
+  'active:false': 'removed from this problem',
+  'active:true': 'put back on this problem',
+  'needs_review:false': 'confirmed as the same problem',
+  'needs_review:true': 'flagged for review',
+  'problemId:*': 'moved out into its own problem',
+};
+
 export function HumanChange({
   field,
   from,
@@ -138,15 +155,17 @@ export function HumanChange({
   reason: string | null;
   actor: string;
 }) {
+  const outcome = OUTCOME[`${field}:${to}`] ?? OUTCOME[`${field}:*`];
   return (
     <p className="border-foreground/15 border-l pl-3 text-sm">
       <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        Human changed
+        Changed by a person
       </span>{' '}
-      <span className="font-mono text-xs">{field}</span>{' '}
-      <span className="num font-mono text-xs">
-        {from ?? '—'} → {to ?? '—'}
-      </span>
+      {outcome ?? (
+        <span className="num">
+          {field} {from ?? '—'} → {to ?? '—'}
+        </span>
+      )}
       {reason && <span className="text-muted-foreground"> · {reason}</span>}
       <span className="text-muted-foreground"> — {actor}</span>
     </p>
@@ -173,12 +192,12 @@ export function Flag({ children }: { children: ReactNode }) {
 export function DegradedNotice({ where = 'this result' }: { where?: string }) {
   return (
     <div className="bg-flag text-flag-fg border-flag-border rounded-md border p-3">
-      <p className="text-sm font-semibold">Degraded path — not the real capability</p>
+      <p className="text-sm font-semibold">Reduced accuracy — this is not the real matching</p>
       <p className="mt-1 max-w-[70ch] text-sm leading-relaxed">
-        No recorded model output covered this input, so {where} came from a character-n-gram
-        fallback. It <strong>cannot</strong> match a paraphrase that shares no vocabulary — which is
-        this product&rsquo;s headline claim. Add a Gemini API key, or use the seeded corpus and the
-        scripted demo request, to see the real thing.
+        Running without an API key, {where} fell back to comparing letters rather than meaning. That
+        fallback <strong>cannot</strong> spot two people describing the same problem in different
+        words, which is the one thing this product is for. Everything in the sample company is
+        covered; free-typed text outside it is not. The README explains how to add a free key.
       </p>
     </div>
   );

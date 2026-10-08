@@ -9,6 +9,16 @@ the authoritative copy; this is the same sequence.
 
 ```bash
 npm install
+npm run demo:reset      # migrate + seed + ingest + score, then asserts the canonical counts
+npm run dev
+```
+
+`demo:reset` replaces the four-step sequence below and is also how you get back
+to this state between takes — it clears the tables **in place**, so it is safe to
+run while `npm run dev` is up. The long form, if you want to watch each step:
+
+```bash
+npm install
 npm run db:migrate
 npm run seed            # 22 accounts, 55 requests, 0 problems
 npm run verify:replay   # proves the keyless path serves real model output — 56/56
@@ -118,7 +128,10 @@ the board**; notification scoping's largest fragment is **#19 of 23**:
 | Confidence | 0.90 | 0.70 |
 
 **Fewer accounts, higher band.** That is the whole claim, and the decomposition
-shows exactly where it comes from: `strategic_fit` 1.00 against 0.10. The model
+shows exactly where it comes from: `strategic_fit` 1.00 against 0.10. Under
+weights `w2` the `now` band holds the top **4** of 23 — the cut points sit in the
+two widest gaps in the measured score distribution, because a `now` band ten
+problems wide is a list, not a prioritisation. The model
 volunteered the tension on the losing side without being asked for it —
 *"this is a widely-felt usability problem that does not contribute to the
 company's core strategic goals"* — which is the sentence a PM should have to

@@ -29,16 +29,21 @@ export default async function IntakePage() {
 
   return (
     <AppShell current="/intake" width="max-w-3xl">
-      <PageHeader title="New request">
-        Intake runs before a record exists, so a duplicate problem is caught at the one moment
-        deduplication is free. A submitter has roughly 60 seconds of attention, so this has to
-        return something useful inside the same interaction — not a ticket number.
+      {/*
+        The explanation lives here and only here. It used to be repeated on the
+        form card below, which made a 60-second submitter read the same sentence
+        twice before reaching the first field.
+      */}
+      <PageHeader title="File a request">
+        File it the way a CSM would, minutes after a call. Before anything is saved, this checks
+        whether the problem underneath is one other customers have already raised — so you find out
+        inside the same minute, instead of getting a ticket number and hearing nothing.
       </PageHeader>
 
       {rows.length === 0 ? (
-        <EmptyState title="No accounts to file against" command="npm run seed">
-          Every request belongs to an account, and the seeded corpus is what supplies them. Load it
-          and this form becomes usable.
+        <EmptyState title="No accounts to file against">
+          Every request belongs to a customer account, and the sample company is what supplies
+          them. The README has the setup steps.
         </EmptyState>
       ) : (
         <IntakeForm accounts={rows} />

@@ -44,6 +44,12 @@ export function addSupport(
   return { ok: true, note: 'support-added', problemId };
 }
 
+/** Recorded reasons are read back by people, so they are sentences, not keys. */
+const DETACH_REASON: Record<string, string> = {
+  'problem-detail': 'removed from the problem page — not the same problem',
+  'review-queue': 'rejected in the review queue — not the same problem',
+};
+
 /**
  * Un-merge: flip `evidence_links.active` to false.
  *
@@ -69,8 +75,9 @@ export function detachEvidence(db: Db, linkId: string, from = 'problem-detail'):
   }
   // Where the rejection happened is part of the record: M3 calls the recorded
   // reasons the highest-value artifact the system produces, and a reason that
-  // names the wrong screen is a reason that cannot be trusted later.
-  recordFlip(db, link.id, 'true', 'false', `un-merged from the ${from} view`);
+  // names the wrong screen is a reason that cannot be trusted later. The
+  // phrasing is a sentence rather than a key, because a PM reads these back.
+  recordFlip(db, link.id, 'true', 'false', DETACH_REASON[from] ?? DETACH_REASON['problem-detail']);
   return { ok: true, note: 'detached', problemId: link.problemId };
 }
 
@@ -90,7 +97,7 @@ export function reattachEvidence(db: Db, linkId: string): MutationResult {
     .set({ active: true, needsReview: false })
     .where(eq(evidenceLinks.id, linkId))
     .run();
-  recordFlip(db, link.id, 'false', 'true', 're-attached from the problem detail view');
+  recordFlip(db, link.id, 'false', 'true', 'put back on the problem — same problem after all');
   return { ok: true, note: 'reattached', problemId: link.problemId };
 }
 
@@ -136,7 +143,7 @@ export function confirmEvidence(db: Db, linkId: string): MutationResult {
       field: 'needs_review',
       suggestedValue: 'true',
       finalValue: 'false',
-      reason: 'confirmed from the review queue — same problem',
+      reason: 'confirmed in the review queue — same problem',
       actor: ACTOR,
     })
     .run();

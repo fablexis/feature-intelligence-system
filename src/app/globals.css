@@ -7,9 +7,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  /*
+   * These must point at the variables `next/font` actually defines on <html>
+   * (`--font-geist-sans` / `--font-geist-mono`, from src/app/layout.tsx).
+   * `--font-sans: var(--font-sans)` was self-referential, so the declaration
+   * was invalid, `font-sans` resolved to nothing, and every screen rendered in
+   * the browser's default serif — the whole app was in Times.
+   */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

@@ -29,13 +29,12 @@ import { reviewQueue } from '@/problems/provenance';
 export const instant = false;
 
 const NOTES: Record<string, string> = {
-  confirmed: 'Confirmed. The attach stands, the flag is cleared, and the agreement is on record.',
-  detached:
-    'Rejected. The attach is un-merged, the request text is intact, and the suggestion is marked rejected.',
+  confirmed: 'Confirmed — it stays on that problem, and your agreement is on record.',
+  detached: 'Rejected — moved off that problem. The request itself is untouched.',
   'already-confirmed': 'That one was already confirmed. Nothing was recorded twice.',
-  'already-detached': 'That attach was already un-merged.',
-  'confirm-detached': 'That attach has already been un-merged, so there is nothing to confirm.',
-  'unknown-link': 'That evidence link no longer exists.',
+  'already-detached': 'That one had already been rejected.',
+  'confirm-detached': 'That one has already been rejected, so there is nothing to confirm.',
+  'unknown-link': 'That request is no longer filed under this problem.',
 };
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -70,37 +69,36 @@ export default async function ReviewPage({
         title="Review queue"
         metrics={
           <>
-            <Metric label="flagged attaches" value={queue.length} tone="flag" />
-            <Metric label="T_auto" value={tAuto.toFixed(2)} hint="chosen from the eval curve" />
+            <Metric label="waiting on you" value={queue.length} tone="flag" />
+            <Metric
+              label="confidence needed to skip review"
+              value={tAuto.toFixed(2)}
+              hint="set from measured results"
+            />
             <Metric label="problems" value={problemCount} />
           </>
         }
       >
-        Every attach below <code className="font-mono">T_auto</code> landed here instead of standing
-        unattended. A false merge hides demand and is nearly undetectable afterwards, so the
-        pipeline is tuned for precision and routes the uncertain band to a human — this screen is
-        that human&rsquo;s half of the bargain (
-        <code className="font-mono text-xs">docs/adr/0005</code>). Confirming and rejecting are
-        both recorded: an override rate near zero would mean the
-        reviewing stopped, which is a product failure, not a success.
+        Each of these requests was filed against a problem that already existed, but the system was
+        not confident enough to decide on its own. Wrongly merging two problems is the expensive
+        mistake — the demand disappears into something else and nobody notices — so anything short
+        of certain comes to you. Your answer is kept either way, including when you agree: if
+        nothing were recorded when you say yes, there would be no way to tell a reviewed queue from
+        an ignored one.
       </PageHeader>
 
       {note && NOTES[note] && <Note>{NOTES[note]}</Note>}
 
       {queue.length === 0 &&
         (problemCount === 0 ? (
-          <EmptyState
-            title="No problems have been formed yet"
-            command={'npm run seed\nnpm run ingest\nnpm run score'}
-          >
-            Seeding loads accounts and raw requests only — the database never contains the
-            groupings it is measured on. Run the pipeline and the flagged attaches appear here.
+          <EmptyState title="No problems yet">
+            The sample company loads customer requests and no groupings, so there is nothing to
+            review until the system has read them. The README has the setup steps.
           </EmptyState>
         ) : (
-          <EmptyState title="Queue clear">
-            Nothing is waiting on a human. Every attach either cleared{' '}
-            <code className="font-mono">T_auto</code> on its own or has already been confirmed or
-            rejected — and each of those decisions is still on record.
+          <EmptyState title="Nothing waiting on you">
+            Every match was either made confidently on its own or has already been confirmed or
+            rejected here — and each of those answers is still on record.
           </EmptyState>
         ))}
 
@@ -122,7 +120,7 @@ export default async function ReviewPage({
                 {SOURCE_LABEL[item.source] ?? item.source}
               </span>
               {item.createdBy === 'human' && (
-                <span className="text-muted-foreground text-xs">attached by a human</span>
+                <span className="text-muted-foreground text-xs">filed by a person, not matched</span>
               )}
             </div>
 
@@ -134,10 +132,10 @@ export default async function ReviewPage({
               <p className="max-w-[70ch] text-sm leading-relaxed">{item.bodyRaw}</p>
             </div>
 
-            {/* Where the pipeline put it. */}
+            {/* Where the system put it. */}
             <div className="border-foreground/15 flex flex-col gap-1 border-l pl-4">
               <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                Attached to
+                Filed under
               </span>
               <Link
                 href={`/problems/${item.problemId}`}
@@ -171,8 +169,8 @@ export default async function ReviewPage({
                 </Button>
               </form>
               <p className="text-muted-foreground text-xs">
-                Rejecting un-merges; it never deletes. The request text survives verbatim and is one
-                click from being re-attached.
+                Rejecting moves the request out of this problem. Nothing is deleted — the
+                customer&rsquo;s words stay on the problem page, one click from being put back.
               </p>
             </div>
           </article>
