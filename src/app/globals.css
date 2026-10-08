@@ -519,10 +519,30 @@
   /* Every page opens the same way: eyebrow, title, one-line lede. */
   .pghead {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: var(--space-6);
     padding: var(--space-5) 0 var(--space-6);
+  }
+
+  /*
+   * The title column asks for 24rem and is allowed to wrap below the metrics
+   * rather than be squeezed by them. Without a basis it collapsed to 12px wide
+   * and 1638px tall between 700 and 1100px — `min-width: 0` let it shrink to
+   * nothing while the metrics stayed `shrink-0`.
+   */
+  .pghead-main {
+    flex: 1 1 24rem;
+    min-width: 0;
+  }
+
+  .pghead-metrics {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4) var(--space-6);
+    padding-bottom: 4px;
   }
 
   .pghead h1 {
@@ -648,6 +668,12 @@
 
     .main {
       padding: var(--space-6) var(--space-5) 96px;
+    }
+
+    .pghead {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
     }
 
     /* Label, count and footnote are the three things the rail cannot hold. */

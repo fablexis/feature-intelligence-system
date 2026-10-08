@@ -118,13 +118,13 @@ export function PageHeader({
 }) {
   return (
     <div className="pghead">
-      <div className="min-w-0">
+      <div className="pghead-main">
         <span className="eyebrow">{eyebrow}</span>
         <h1 className="h1">{title}</h1>
         {children && <p className="lede">{children}</p>}
       </div>
       {metrics && (
-        <dl className="flex shrink-0 flex-wrap gap-x-8 gap-y-4 pb-1">{metrics}</dl>
+        <dl className="pghead-metrics">{metrics}</dl>
       )}
     </div>
   );

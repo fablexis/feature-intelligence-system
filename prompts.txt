@@ -590,3 +590,16 @@ Legacy shadcn token names are kept as aliases onto the new ones, per Implementac
 The shell is three shapes from one markup, switched in CSS: 264px sidebar from 1100, 88px icon rail from 700 where the amber count becomes an amber dot, and below that no sidebar - a 60px header and a floating tab bar. Nav is Overview / Problems / Priority / Review with the flagged count in amber; New request is the only filled button. Every page now opens with eyebrow, title and lede, so titles say something instead of repeating the section: "23 problems behind 55 requests" from real data, "What to work on, and why", "11 matches waiting on you".
 
 One detector warning kept deliberately: ease-spring reads as bounce easing. It is the reference's own token and the brief scopes it to confirmations and toasts only, so the brief wins; recorded in DESIGN.md rather than silenced.
+
+=== 2026-10-08T05:40:00Z ===
+PROMPT (verbatim):
+Reviewed in the browser. Day and night both render, fonts are Plus Jakarta Sans on headings and DM Sans on body, the sidebar is 264px, the rail and the amber dot show up, and at 390px the sidebar is gone, the 60px header and the floating tab bar are there, and the title is full width. Amber is only the review count and the "needs review" chips. Contrast numbers stand. Continue to step 3.
+
+One fix first, in this same step, because it is the shell. Between 700 and 1100px the page header collapses. `.pghead` stays a row, the metrics `dl` is `shrink-0` at about 520px, and the title column is `min-w-0`, so once the row is narrower than the metrics the title and the lede shrink to 12px wide and run thousands of pixels tall, overlapping the numbers. Measured at 700px: h1 12×180, lede 12×1638. At 1280px and at 390px the header is fine, because 390 already stacks it. Stack `.pghead` in the rail breakpoint the same way, then remeasure the title width at 700px before moving on. Push that fix, then start step 3.
+
+RESPONSE (entry 30):
+Reproduced the collapse before touching it, and got exactly the reported numbers: h1 12x180 at 700px, with .pghead itself 1928px tall. Built a measuring tool to do it rather than eyeballing - headless Chrome over the DevTools protocol, driven from a scratchpad script with Node's built-in WebSocket, so no Playwright and no new dependency. It reports laid-out width, height, computed font and size for any selector at any viewport, which is reusable for the rest of E6.
+
+Fixed it twice over rather than only where it was reported. The rail breakpoint now stacks the header, as asked. Underneath that, the row may wrap and the title column carries a real basis (flex: 1 1 24rem) instead of min-width: 0, so the metrics can never squeeze it to a ribbon at any width - the reported range was 700-1100, but the same collapse was reachable above 1100 with a longer title or a fifth metric, and only the structural fix closes that.
+
+Remeasured at 390, 700, 760, 900, 1099, 1100, 1280 and 1440 across all five routes: the title is 564x36 at 700px where it was 12x180, and every breakpoint reads sensibly. Worth knowing: at 1440 the metrics fit beside the title so the title column is 528 and wraps to two lines, while at 1280 the metrics wrap below and the title gets the full 920. Both are legible and that is the two-column header working as designed, not a regression.
