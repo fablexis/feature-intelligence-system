@@ -2,199 +2,378 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * Day and Night follow the OS, with no toggle: the preference already lives
+ * there. Redefining Tailwind's `dark` variant to the media query is what makes
+ * every existing `dark:` utility keep working — before this, nothing added a
+ * `.dark` class anywhere, so the dark tokens were unreachable decoration.
+ */
+@custom-variant dark (@media (prefers-color-scheme: dark));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   /*
-   * These must point at the variables `next/font` actually defines on <html>
-   * (`--font-geist-sans` / `--font-geist-mono`, from src/app/layout.tsx).
-   * `--font-sans: var(--font-sans)` was self-referential, so the declaration
-   * was invalid, `font-sans` resolved to nothing, and every screen rendered in
-   * the browser's default serif — the whole app was in Times.
+   * Three families, three jobs. These MUST point at the variables next/font
+   * defines in layout.tsx and never at themselves: `--font-sans: var(--font-sans)`
+   * is what shipped the entire app in the browser's default serif at E1.
    */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --font-heading: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-plus-jakarta), "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-plus-jakarta), "Avenir Next", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+
+  /* The design system's own names. */
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
   --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-accent-tint: var(--accent-tint);
+  --color-on-accent-tint: var(--on-accent-tint);
   --color-band-now: var(--band-now);
-  --color-band-now-fg: var(--band-now-fg);
+  --color-on-band-now: var(--on-band-now);
   --color-band-next: var(--band-next);
-  --color-band-next-fg: var(--band-next-fg);
+  --color-on-band-next: var(--on-band-next);
   --color-band-later: var(--band-later);
-  --color-band-later-fg: var(--band-later-fg);
+  --color-on-band-later: var(--on-band-later);
+  --color-band-later-line: var(--band-later-line);
   --color-band-no: var(--band-no);
-  --color-band-no-fg: var(--band-no-fg);
+  --color-on-band-no: var(--on-band-no);
   --color-flag: var(--flag);
-  --color-flag-fg: var(--flag-fg);
-  --color-flag-border: var(--flag-border);
+  --color-on-flag: var(--on-flag);
+  --color-flag-line: var(--flag-line);
+  --color-destructive-tint: var(--destructive-tint);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-on-success-tint: var(--on-success-tint);
+  --color-focus-ring: var(--focus-ring);
+
+  /*
+   * Legacy shadcn names, kept so every component that already reads them
+   * restyles without being touched. Equivalences are Implementacion.md's table.
+   */
+  --color-background: var(--surface);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface-raised);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--ink);
+  --color-muted: var(--surface-sunken);
+  --color-muted-foreground: var(--ink-muted);
+  --color-secondary: var(--surface-sunken);
+  --color-secondary-foreground: var(--ink);
+  --color-accent-foreground: var(--on-accent);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--on-accent);
+  --color-border: var(--line);
+  --color-input: var(--line-strong);
+  --color-ring: var(--focus-ring);
+  --color-destructive: var(--destructive);
+  --color-band-now-fg: var(--on-band-now);
+  --color-band-next-fg: var(--on-band-next);
+  --color-band-later-fg: var(--on-band-later);
+  --color-band-no-fg: var(--on-band-no);
+  --color-flag-fg: var(--on-flag);
+  --color-flag-border: var(--flag-line);
+  --color-sidebar: var(--surface-raised);
+  --color-sidebar-foreground: var(--ink);
+  --color-sidebar-border: var(--line);
+  --color-sidebar-accent: var(--accent-tint);
+  --color-sidebar-accent-foreground: var(--on-accent-tint);
+  --color-sidebar-primary: var(--accent);
+  --color-sidebar-primary-foreground: var(--on-accent);
+  --color-sidebar-ring: var(--focus-ring);
+
+  /*
+   * Explicit radii rather than a calc chain off one value, because the system
+   * states them: 8 small, 12 controls, 20 cards, 28 hero, pill for chips. The
+   * legacy `rounded-4xl` on badges lands on the pill, which is what the chips
+   * are meant to be.
+   */
+  --radius-sm: var(--radius-sm-v);
+  --radius-md: var(--radius-md-v);
+  --radius-lg: var(--radius-lg-v);
+  --radius-xl: var(--radius-xl-v);
+  --radius-2xl: var(--radius-xl-v);
+  --radius-3xl: var(--radius-pill);
+  --radius-4xl: var(--radius-pill);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-card: var(--shadow-card-v);
+  --shadow-lift: var(--shadow-lift-v);
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  /* 0.556 passes at 4.74:1 but reads thin through a projector; 0.5 is 6:1. */
-  --muted-foreground: oklch(0.5 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* ---- Day ------------------------------------------------------------- */
+  --surface: #f4f6fc;
+  --surface-raised: #ffffff;
+  --surface-sunken: #e9ecf7;
+  --line: #e1e5f2;
+  --line-strong: #7d8399;
+  --ink: #0f1226;
+  --ink-muted: #4f5472;
+  --accent: #2f4bff;
+  --accent-hover: #2236d9;
+  --on-accent: #ffffff;
+  --accent-tint: #e3e8ff;
+  --on-accent-tint: #1d2fbd;
+  --destructive: #c81e45;
+  --destructive-tint: #ffe3ea;
+  --success: #0a7a53;
+  --success-tint: #d9f5ea;
+  --on-success-tint: #065a3d;
+  --flag: #ffeab8;
+  --on-flag: #6b3a00;
+  --flag-line: #c27a0a;
 
   /*
-   * The band ladder — one hue stepped by intensity, per docs/DESIGN.md. An
-   * ordinal scale gets a sequential ramp so the ordering is visible before the
-   * labels are read, and no band shares a hue with an alarm.
+   * The band ladder: one blue in four intensities, so the ordering reads
+   * before the label does. The label always carries the word as well.
    */
-  --band-now: oklch(0.36 0.13 255);
-  --band-now-fg: oklch(0.985 0 0);
-  --band-next: oklch(0.93 0.045 255);
-  --band-next-fg: oklch(0.38 0.12 255);
-  --band-later: oklch(0.98 0.012 250);
-  --band-later-fg: oklch(0.45 0.045 250);
-  --band-no: oklch(0.97 0 0);
-  --band-no-fg: oklch(0.5 0 0);
+  --band-now: var(--accent);
+  --on-band-now: var(--on-accent);
+  --band-next: var(--accent-tint);
+  --on-band-next: var(--on-accent-tint);
+  --band-later: var(--surface-raised);
+  --on-band-later: var(--on-accent-tint);
+  --band-later-line: #6b7bd6;
+  --band-no: var(--surface-sunken);
+  --on-band-no: var(--ink-muted);
+  --focus-ring: var(--accent);
 
-  /*
-   * Reserved for the two things this product promised never to hide: a flagged
-   * attach and the degraded path. Decorative use anywhere would make the
-   * degraded label stop meaning anything.
-   */
-  --flag: oklch(0.97 0.035 65);
-  --flag-fg: oklch(0.44 0.13 65);
-  --flag-border: oklch(0.82 0.1 65);
+  --shadow-card-v: 0 1px 2px rgba(15, 18, 38, 0.06), 0 12px 32px -14px rgba(30, 47, 160, 0.2);
+  --shadow-lift-v: 0 2px 4px rgba(15, 18, 38, 0.06), 0 24px 44px -16px rgba(30, 47, 160, 0.34);
+
+  /* ---- Not theme-dependent --------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 80px;
+
+  --radius-sm-v: 8px;
+  --radius-md-v: 12px;
+  --radius-lg-v: 20px;
+  --radius-xl-v: 28px;
+  --radius-pill: 999px;
+
+  --duration-fast: 140ms;
+  --duration-base: 240ms;
+  --duration-slow: 560ms;
+  --duration-count: 900ms;
+  --duration-stagger: 45ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* ---- Night --------------------------------------------------------- */
+    --surface: #0b0d1a;
+    --surface-raised: #14172a;
+    --surface-sunken: #080a14;
+    --line: #23273f;
+    --line-strong: #7a809e;
+    --ink: #eef0fb;
+    --ink-muted: #a4a9c6;
+    --accent: #8a98ff;
+    --accent-hover: #a5b0ff;
+    --on-accent: #0a0f33;
+    --accent-tint: #1f2650;
+    --on-accent-tint: #c4ccff;
+    --destructive: #ff7a95;
+    --destructive-tint: #3d1220;
+    --success: #3ddba0;
+    --success-tint: #0f3a2c;
+    --on-success-tint: #a7f0d3;
+    --flag: #3a2a08;
+    --on-flag: #ffd98a;
+    --flag-line: #b07a1a;
 
-  --band-now: oklch(0.62 0.14 255);
-  --band-now-fg: oklch(0.15 0.02 255);
-  --band-next: oklch(0.32 0.07 255);
-  --band-next-fg: oklch(0.88 0.05 255);
-  --band-later: oklch(0.26 0.02 250);
-  --band-later-fg: oklch(0.78 0.02 250);
-  --band-no: oklch(0.25 0 0);
-  --band-no-fg: oklch(0.7 0 0);
-
-  --flag: oklch(0.28 0.055 65);
-  --flag-fg: oklch(0.85 0.1 65);
-  --flag-border: oklch(0.45 0.09 65);
+    --shadow-card-v: 0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
+    --shadow-lift-v: 0 2px 4px rgba(0, 0, 0, 0.5), 0 24px 44px -16px rgba(0, 0, 0, 0.85);
+  }
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-line;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
     /* The board is read at a distance; never shrink it to fit. */
-    scrollbar-color: var(--border) transparent;
+    scrollbar-color: var(--line-strong) transparent;
   }
+
+  body {
+    background: var(--surface);
+    color: var(--ink);
+    font-size: 16px;
+    line-height: 25px;
+    -webkit-font-smoothing: antialiased;
+  }
+
   /* Browser surfaces ship with defaults that belong to no design system. */
   ::selection {
-    background: var(--band-next);
-    color: var(--band-next-fg);
+    background: var(--accent-tint);
+    color: var(--on-accent-tint);
   }
+
   :root {
-    caret-color: var(--foreground);
+    caret-color: var(--accent);
   }
-  /* Every number that appears in a column lines up down the page. */
+
+  :focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm-v);
+  }
+}
+
+/*
+ * The type scale, as named styles rather than loose utilities. Headings and
+ * figures are Plus Jakarta; interface text is DM Sans; only measurements are
+ * mono — never as a costume for "technical".
+ */
+@layer components {
+  .display,
+  .h1,
+  .h2,
+  .h3,
+  .statement,
+  .numeral-xl,
+  .numeral-lg,
+  .numeral-md {
+    font-family: var(--font-display);
+  }
+
+  .display {
+    font-size: 56px;
+    line-height: 60px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+  }
+
+  .h1 {
+    font-size: 40px;
+    line-height: 46px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .h2 {
+    font-size: 26px;
+    line-height: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .h3 {
+    font-size: 20px;
+    line-height: 26px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .statement {
+    font-size: 19px;
+    line-height: 27px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .numeral-xl {
+    font-size: 64px;
+    line-height: 64px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+  }
+
+  .numeral-lg {
+    font-size: 40px;
+    line-height: 44px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .numeral-md {
+    font-size: 26px;
+    line-height: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .body-strong {
+    font-size: 16px;
+    line-height: 25px;
+    font-weight: 600;
+  }
+
+  .quote {
+    font-size: 18px;
+    line-height: 28px;
+    font-weight: 400;
+  }
+
+  .body-sm {
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .label {
+    font-size: 13px;
+    line-height: 16px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .chip-lg {
+    font-size: 15px;
+    line-height: 15px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  /* Measurements only: confidence, similarity, ARR, weighted sums. */
+  .measure {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Any number that appears in a column lines up down the page. */
   .num {
     font-variant-numeric: tabular-nums;
-    font-feature-settings: 'tnum' 1;
+    font-feature-settings: "tnum" 1;
+  }
+
+  /* Below 768px the three largest steps come down a notch. */
+  @media (max-width: 767px) {
+    .display {
+      font-size: 40px;
+      line-height: 44px;
+    }
+
+    .h1 {
+      font-size: 30px;
+      line-height: 36px;
+      letter-spacing: -0.025em;
+    }
+
+    .numeral-xl {
+      font-size: 48px;
+      line-height: 48px;
+    }
   }
 }
