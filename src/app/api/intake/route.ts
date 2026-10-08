@@ -75,6 +75,10 @@ export async function POST(request: Request) {
                   kind: 'attach',
                   auto: result.resolution.auto,
                   score: result.resolution.score,
+                  // The adjudicator's own confidence, distinct from the attach
+                  // score (which is min(confidence, cosine)) — E1 shows both,
+                  // because `min` hides which of the two signals was weaker.
+                  confidence: result.resolution.verdict.confidence,
                   rationale: result.resolution.verdict.rationale,
                   problemId: result.resolution.problemId,
                 }

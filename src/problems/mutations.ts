@@ -54,7 +54,7 @@ export function addSupport(
  * which is what makes M1's counterfactual computable without a separate
  * experiment.
  */
-export function detachEvidence(db: Db, linkId: string): MutationResult {
+export function detachEvidence(db: Db, linkId: string, from = 'problem-detail'): MutationResult {
   const link = db.select().from(evidenceLinks).where(eq(evidenceLinks.id, linkId)).get();
   if (!link) return { ok: false, note: 'unknown-link' };
   if (!link.active) return { ok: true, note: 'already-detached', problemId: link.problemId };
@@ -67,7 +67,10 @@ export function detachEvidence(db: Db, linkId: string): MutationResult {
       .where(eq(dedupeSuggestions.id, link.suggestionId))
       .run();
   }
-  recordFlip(db, link.id, 'true', 'false', 'un-merged from the problem detail view');
+  // Where the rejection happened is part of the record: M3 calls the recorded
+  // reasons the highest-value artifact the system produces, and a reason that
+  // names the wrong screen is a reason that cannot be trusted later.
+  recordFlip(db, link.id, 'true', 'false', `un-merged from the ${from} view`);
   return { ok: true, note: 'detached', problemId: link.problemId };
 }
 
@@ -89,6 +92,55 @@ export function reattachEvidence(db: Db, linkId: string): MutationResult {
     .run();
   recordFlip(db, link.id, 'false', 'true', 're-attached from the problem detail view');
   return { ok: true, note: 'reattached', problemId: link.problemId };
+}
+
+/**
+ * Confirm a flagged attach — the PM half of [ADR 0005](../../docs/adr/0005-duplicate-resolution-actor.md).
+ *
+ * The *reject* side of the queue is `detachEvidence` unchanged: rejecting a
+ * flagged attach and un-merging from the detail page are the same operation and
+ * must stay one code path, or the two screens could disagree about what
+ * rejection means. Confirming had no existing counterpart — `reattachEvidence`
+ * clears the flag, but only on a link that was detached first — so this is the
+ * one new mutation E1 adds.
+ *
+ * What it writes is a flag and a history row, never a correction of the model:
+ * the suggestion is marked `accepted` (so M1's counterfactual stays computable
+ * from the same column as a rejection) and the confirmation is appended to
+ * `human_overrides`, because "a human looked and agreed" is exactly as much a
+ * recorded judgement as a disagreement. An override rate near zero means the
+ * humans stopped thinking (PRODUCT challenge #4) — which is only measurable if
+ * agreement is recorded too.
+ */
+export function confirmEvidence(db: Db, linkId: string): MutationResult {
+  const link = db.select().from(evidenceLinks).where(eq(evidenceLinks.id, linkId)).get();
+  if (!link) return { ok: false, note: 'unknown-link' };
+  if (!link.active) return { ok: false, note: 'confirm-detached', problemId: link.problemId };
+  if (!link.needsReview) return { ok: true, note: 'already-confirmed', problemId: link.problemId };
+
+  db.update(evidenceLinks)
+    .set({ needsReview: false })
+    .where(eq(evidenceLinks.id, linkId))
+    .run();
+
+  if (link.suggestionId) {
+    db.update(dedupeSuggestions)
+      .set({ humanAction: 'accepted', actedAt: new Date() })
+      .where(eq(dedupeSuggestions.id, link.suggestionId))
+      .run();
+  }
+  db.insert(humanOverrides)
+    .values({
+      targetType: 'merge',
+      targetId: linkId,
+      field: 'needs_review',
+      suggestedValue: 'true',
+      finalValue: 'false',
+      reason: 'confirmed from the review queue — same problem',
+      actor: ACTOR,
+    })
+    .run();
+  return { ok: true, note: 'confirmed', problemId: link.problemId };
 }
 
 /**

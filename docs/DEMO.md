@@ -235,3 +235,10 @@ Say these before a reviewer finds them:
   `needs_review`, so the flagged population is visible rather than hidden —
   and the precision number quoted in Beat 4 covers only the **auto** band,
   where no human would have been asked.
+
+  **`/review` is where that gets worked** ([E1](./TASKS.md#e1--ui-polish-of-the-demo-screens)):
+  the eleven flagged attaches, each with the verbatim request, the problem it
+  landed in, and the verdict, confidence and cosine behind the match. Confirm
+  or reject. Worth doing live for one item — rejecting un-merges without
+  deleting, and both decisions are recorded, which is the only way an override
+  rate can distinguish "the PM agreed" from "nobody looked".

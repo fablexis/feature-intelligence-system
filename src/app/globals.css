@@ -46,6 +46,17 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-band-now: var(--band-now);
+  --color-band-now-fg: var(--band-now-fg);
+  --color-band-next: var(--band-next);
+  --color-band-next-fg: var(--band-next-fg);
+  --color-band-later: var(--band-later);
+  --color-band-later-fg: var(--band-later-fg);
+  --color-band-no: var(--band-no);
+  --color-band-no-fg: var(--band-no-fg);
+  --color-flag: var(--flag);
+  --color-flag-fg: var(--flag-fg);
+  --color-flag-border: var(--flag-border);
 }
 
 :root {
@@ -60,7 +71,8 @@
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  /* 0.556 passes at 4.74:1 but reads thin through a projector; 0.5 is 6:1. */
+  --muted-foreground: oklch(0.5 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
@@ -81,6 +93,29 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /*
+   * The band ladder — one hue stepped by intensity, per docs/DESIGN.md. An
+   * ordinal scale gets a sequential ramp so the ordering is visible before the
+   * labels are read, and no band shares a hue with an alarm.
+   */
+  --band-now: oklch(0.36 0.13 255);
+  --band-now-fg: oklch(0.985 0 0);
+  --band-next: oklch(0.93 0.045 255);
+  --band-next-fg: oklch(0.38 0.12 255);
+  --band-later: oklch(0.98 0.012 250);
+  --band-later-fg: oklch(0.45 0.045 250);
+  --band-no: oklch(0.97 0 0);
+  --band-no-fg: oklch(0.5 0 0);
+
+  /*
+   * Reserved for the two things this product promised never to hide: a flagged
+   * attach and the degraded path. Decorative use anywhere would make the
+   * degraded label stop meaning anything.
+   */
+  --flag: oklch(0.97 0.035 65);
+  --flag-fg: oklch(0.44 0.13 65);
+  --flag-border: oklch(0.82 0.1 65);
 }
 
 .dark {
@@ -115,6 +150,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  --band-now: oklch(0.62 0.14 255);
+  --band-now-fg: oklch(0.15 0.02 255);
+  --band-next: oklch(0.32 0.07 255);
+  --band-next-fg: oklch(0.88 0.05 255);
+  --band-later: oklch(0.26 0.02 250);
+  --band-later-fg: oklch(0.78 0.02 250);
+  --band-no: oklch(0.25 0 0);
+  --band-no-fg: oklch(0.7 0 0);
+
+  --flag: oklch(0.28 0.055 65);
+  --flag-fg: oklch(0.85 0.1 65);
+  --flag-border: oklch(0.45 0.09 65);
 }
 
 @layer base {
@@ -126,5 +174,20 @@
   }
   html {
     @apply font-sans;
+    /* The board is read at a distance; never shrink it to fit. */
+    scrollbar-color: var(--border) transparent;
+  }
+  /* Browser surfaces ship with defaults that belong to no design system. */
+  ::selection {
+    background: var(--band-next);
+    color: var(--band-next-fg);
+  }
+  :root {
+    caret-color: var(--foreground);
+  }
+  /* Every number that appears in a column lines up down the page. */
+  .num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
   }
 }

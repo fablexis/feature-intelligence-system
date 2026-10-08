@@ -310,16 +310,19 @@ Priority order. None are in the 180-minute budget.
 
 ### E1 — UI polish of the demo screens
 **Goal:** the intake and problem-detail screens read as a product, not a prototype. Use the `impeccable` skill.
-**Depends on:** C3, C4, C5
+**Depends on:** C3, C4, C5 · **Outside the appetite** ([PRODUCT](./PRODUCT.md#optional-extensions-out-of-appetite)) — time-boxed to ~30 min, one review round, no new capability beyond the review queue. Direction recorded in [DESIGN.md](./DESIGN.md).
 
-- [ ] Intake's three outcomes are visually distinct at a glance
-- [ ] The degraded-path label is honest and unmissable
-- [ ] Priority board legible when projected
-- [ ] Empty states for a fresh database
-- [ ] ADR 0005's filtered PM review queue (the flagged population is countable today, but there is no view) — deferred out of C4
-- [ ] Page metadata still says `Create Next App` — one line, found during C8's fresh-clone pass and left here rather than widening that task
+- [x] ADR 0005's filtered PM review queue (the flagged population is countable today, but there is no view) — deferred out of C4 → `/review`: 11 flagged attaches, verbatim request + verdict + target problem, confirm or reject. Reject *is* `detachEvidence` — one code path with the detail page, so the two screens cannot disagree about what rejection means. `confirmEvidence` is the one new mutation: clears the flag, marks the suggestion `accepted`, appends to `human_overrides` (agreement is recorded, or M3's override rate reads as if nobody agreed). 10 tests in `src/problems/review.test.ts`
+- [x] AI provenance made legible — verdict, confidence and cosine next to the verbatim request on `/review` and on problem detail; `human_overrides` rendered as "human changed `field` from → to, reason, actor"; the board names the model, provider and prompt version behind each factor estimate. All of it was already stored since C3/C8 and visible nowhere
+- [x] Priority board legible when projected — band-grouped rows, the band chip and the distinct-account count at display size with ARR beside them, decomposition behind a disclosure. Verified: data residency reads `now · 3 accounts · $1.57M` at the top and notification scoping `no · 4 accounts · $79k` below it, which is Beat 2's whole claim in two seconds
+- [x] Intake's three outcomes are visually distinct at a glance — auto-attach, attached-pending-confirmation (reserved amber) and new-problem are three different frames, not three copies of one card
+- [x] The degraded-path label is honest and unmissable — a bordered notice in the reserved hue naming the capability it loses, on intake and on any evidence row whose request came through the fallback. Amber is reserved for `needs review` and `degraded` only; decorative use would make the label stop meaning anything
+- [x] Empty, loading and error states on the demo screens — empty states name the command that fills them, `loading.tsx` skeletons match the row geometry they replace (and become the prerendered PPR shell), one root `error.tsx` that names the migrate/seed/ingest/score recovery, `not-found.tsx` explaining that re-ingest retires problem ids
+- [x] Page metadata still says `Create Next App` — one line, found during C8's fresh-clone pass and left here rather than widening that task
 
-**Actual:** · **Status:** Todo · **Deviation:**
+**Verified:** all seven routes 200 against the production build; Beat 3 typed through the intake API auto-attaches at score 0.822 / confidence 0.99 / 0 degraded; confirm and reject driven over HTTP with **no client JavaScript** (multipart POST → 303) writing the right flag, suggestion action and history row; 212 tests, typecheck and lint clean; demo database rebuilt to its canonical state (55 requests, 23 problems, 11 flagged, 23 score runs, 0 overrides, 0 supports, 0 degraded) and `npm run eval` reproducing precision 1.000 / recall 0.466.
+
+**Actual:** ~55 min · **Status:** Done · **Deviation:** ran ~25 min over the 30-minute box. Three things were not polish and took the time: provenance needed a new read module (`src/problems/provenance.ts`) because nothing had ever read `dedupe_suggestions` back out; the review queue needed `confirmEvidence` plus tests, since no existing mutation cleared the flag on an *attached* link; and verifying the queue end to end meant driving Server Actions over curl. Two defects found and logged to E3 rather than fixed here (`resetDerived` cannot re-run after `score`, and it is not transactional). The home page was re-cut as a demo-path index — it is the first screen of the demo path, and its build-progress checklist served the author, not the reviewer.
 
 ### E2 — Decision brief + stakeholder update
 **Goal:** Candidate C's core, as a draft-only capability.
@@ -343,6 +346,8 @@ Priority order. None are in the 180-minute budget.
 - [ ] `npm run record -- --dry-run` warns that extract and factors share a bucket even though extraction is fully recorded: `record.ts` calls `renderBudget()` with no argument, so it uses the pre-C5 strict rule instead of the active-stage one *(found by C8)*
 - [ ] `generateObject` is deprecated in AI SDK 7; prompt versions render `v1-<hash>` where `v1` is the *scheme* version, which reads misleadingly *(both found by C2/C3)*
 - [ ] 9 npm audit findings, all dev-tooling-only, with no non-breaking fix available *(found by C1)*
+- [ ] **`npm run ingest` cannot be re-run after `npm run score`**: `resetDerived` deletes `problems` but not `ai_decisions`, whose `problem_id` references them, so the delete fails on the foreign key. The documented recovery is to delete `data/fis.db` and redo migrate → seed → ingest → score *(found by E1 while restoring the demo database)*
+- [ ] **`resetDerived` is not transactional**, so the failure above leaves a half-reset database — 23 problems with zero evidence links, which `score` then reports as 23 degraded rather than as a broken state. Wrap it in one transaction and fail cleanly *(found by E1)*
 
 **Actual:** · **Status:** Todo · **Deviation:**
 

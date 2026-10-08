@@ -40,3 +40,27 @@ export async function reattachEvidenceAction(formData: FormData): Promise<void> 
   const problemId = String(formData.get('problemId') ?? '');
   await run(mutate.reattachEvidence(db, linkId), problemId);
 }
+
+/**
+ * The review queue's two actions (E1).
+ *
+ * Same mutations as the detail page — rejecting a flagged attach *is*
+ * `detachEvidence` — but they return to the queue instead of to the problem,
+ * because a PM working a queue of eleven wants the twelfth, not a detour. The
+ * queue is where the decision was made, so it is where the confirmation
+ * belongs.
+ */
+async function backToReview(result: mutate.MutationResult): Promise<never> {
+  revalidatePath('/review');
+  revalidatePath('/problems');
+  if (result.problemId) revalidatePath(`/problems/${result.problemId}`);
+  redirect(`/review?note=${encodeURIComponent(result.note)}`);
+}
+
+export async function confirmFromReviewAction(formData: FormData): Promise<void> {
+  await backToReview(mutate.confirmEvidence(db, String(formData.get('linkId') ?? '')));
+}
+
+export async function rejectFromReviewAction(formData: FormData): Promise<void> {
+  await backToReview(mutate.detachEvidence(db, String(formData.get('linkId') ?? ''), 'review-queue'));
+}

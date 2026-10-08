@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { AppShell, EmptyState, Metric, PageHeader } from '@/components/shell';
+import { Flag } from '@/components/signals';
 import { db } from '@/db';
 import { listProblems, problemStats } from '@/problems/evidence';
 
@@ -10,9 +10,8 @@ import { listProblems, problemStats } from '@/problems/evidence';
  * shared problems that nobody labelled.
  *
  * Ordered by **evidence strength** — distinct accounts affected — because that
- * is the only ranking this build has measured. C5 replaces the ordering with an
- * explainable score; the honest ordering until then is the raw count, not a
- * number that looks like a judgement but isn't one yet.
+ * is the only ranking this screen has measured. The priority board resolves the
+ * breadth-versus-value trade; this list deliberately does not, and says so.
  */
 export const instant = false;
 
@@ -57,59 +56,72 @@ export default async function ProblemsPage() {
   );
 
   return (
-    <main className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-12">
-      <div>
-        <Link href="/" className="text-muted-foreground text-sm hover:underline">
-          ← Home
-        </Link>
-        <h1 className="mt-2 text-xl font-semibold tracking-tight">Problems</h1>
-        <p className="text-muted-foreground mt-2 text-sm">
-          {ranked.length} problems formed from {totals.requests} attached requests by the intake
-          pipeline — nobody labelled these. {totals.needsReview} attachments are flagged for review
-          because they landed below the auto-merge threshold. Ground truth for this corpus is 12, so
-          the pipeline still over-splits; measured recall is 0.466 (
-          <code>docs/eval-results.md</code>).
-        </p>
-      </div>
+    <AppShell current="/problems" width="max-w-4xl">
+      <PageHeader
+        title="Problems"
+        metrics={
+          <>
+            <Metric label="problems formed" value={ranked.length} hint="ground truth is 12" />
+            <Metric label="requests attached" value={totals.requests} />
+            <Metric label="flagged attaches" value={totals.needsReview} tone="flag" />
+          </>
+        }
+      >
+        Formed by the intake pipeline from raw text — nobody labelled these. Ordered by distinct
+        accounts affected, which is breadth, not priority. Ground truth for this corpus is 12
+        problems, so the pipeline still over-splits: measured recall is{' '}
+        <span className="num font-mono">0.466</span> (
+        <code className="font-mono text-xs">docs/eval-results.md</code>), and the gap is visible
+        below as several small problems that are really one.
+      </PageHeader>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Ordered by evidence strength</CardTitle>
-          <CardDescription>
-            Distinct accounts affected. Not a priority ranking — that needs the strategic and
-            customer-value factors, which C5 adds. Popularity and value point in opposite
-            directions, which is the trade this ordering deliberately does not yet resolve.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          {ranked.length === 0 && (
-            <p className="text-muted-foreground text-sm">
-              No problems yet. Run <code>npm run seed</code> then <code>npm run ingest</code>, or
-              submit a request.
-            </p>
-          )}
+      {ranked.length === 0 ? (
+        <EmptyState
+          title="No problems yet"
+          command={'npm run seed\nnpm run ingest\nnpm run score'}
+        >
+          Seeding loads accounts and raw requests only — the database never contains the groupings
+          it is measured on, so this list is empty until the pipeline forms them. You can also
+          submit a request and watch one form.
+        </EmptyState>
+      ) : (
+        <ul className="flex flex-col gap-2">
           {ranked.map(({ problem, stats: s }) => (
-            <Link
-              key={problem.id}
-              href={`/problems/${problem.id}`}
-              className="hover:bg-muted/50 flex flex-col gap-1 rounded-md border p-3"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={s.strength > 1 ? 'default' : 'outline'}>
-                  {s.strength} account{s.strength === 1 ? '' : 's'}
-                </Badge>
-                <span className="text-sm font-medium">{problem.statement}</span>
-              </div>
-              <span className="text-muted-foreground text-xs">
-                {s.requestCount} request{s.requestCount === 1 ? '' : 's'}
-                {s.supportOnlyAccounts > 0 && ` · ${s.supportOnlyAccounts} clicked`}
-                {s.needsReview > 0 && ` · ${s.needsReview} needs review`}
-                {s.detached > 0 && ` · ${s.detached} detached`}
-              </span>
-            </Link>
+            <li key={problem.id}>
+              <Link
+                href={`/problems/${problem.id}`}
+                className="hover:bg-muted/50 flex items-start gap-4 rounded-lg border p-4 transition-colors"
+              >
+                <span className="flex w-14 shrink-0 flex-col items-center">
+                  <span className="num text-2xl leading-none font-semibold tracking-tight">
+                    {s.strength}
+                  </span>
+                  <span className="text-muted-foreground text-[0.6875rem]">
+                    account{s.strength === 1 ? '' : 's'}
+                  </span>
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <span className="font-medium">{problem.statement}</span>
+                  <span className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs">
+                    <span className="num">
+                      {s.requestCount} request{s.requestCount === 1 ? '' : 's'}
+                    </span>
+                    {s.supportOnlyAccounts > 0 && (
+                      <span className="num">{s.supportOnlyAccounts} clicked</span>
+                    )}
+                    {s.detached > 0 && <span className="num">{s.detached} detached</span>}
+                    {s.needsReview > 0 && (
+                      <Flag>
+                        {s.needsReview} need{s.needsReview === 1 ? 's' : ''} review
+                      </Flag>
+                    )}
+                  </span>
+                </span>
+              </Link>
+            </li>
           ))}
-        </CardContent>
-      </Card>
-    </main>
+        </ul>
+      )}
+    </AppShell>
   );
 }
