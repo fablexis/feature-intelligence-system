@@ -615,3 +615,25 @@ Two small client components, and only two. Expand does the height disclosure wit
 The shadcn primitives are re-scaled onto the same .btn classes the shell already uses rather than given a second button vocabulary: variants now choose colour only, while size, radius, weight and the press response come from the shared class. Badge became the 30px pill the chips were always meant to be; Card moved to radius 20 with the tinted shadow instead of a ring.
 
 Verified by measurement, not by eye: buttons 56 / 48 / 40 with 17-15px labels and nothing under 40, flag 28, count 26, and the Why disclosure collapsed to height 0. Cards, fields and the segmented control are built but not yet reachable from a view - the pages still carry E1's markup, which steps 5 and 6 replace. 212 tests, typecheck, lint, build clean, all six routes 200, 62 contrast pairs still clear, and the detector still reports only the one ease-spring warning the brief overrides.
+
+=== 2026-10-09T00:03:00Z ===
+PROMPT (verbatim):
+Open a pull request from `redesign` into `main` and merge it, so the repo has a single branch. This repo's default branch is `main`. There is no `master`. Do not create one and do not rename `main`.
+
+`redesign` is five commits ahead of `main` (a413daa through aa742af): the E6 design reference, tokens, shell, the 700–1100px header fix, and shared pieces. `main` has nothing that `redesign` lacks. Working tree is clean and `redesign` is already pushed.
+
+1. Create the PR with `gh pr create`, base `main`, head `redesign`. Title: "feat(E6): visual redesign, in progress". Body: what the five commits change, that steps 0–3 of E6 are in and later steps are not, and that this replaces the previous UI on `main`.
+2. Merge it with a merge commit (`gh pr merge --merge`). Do not squash and do not rebase. Do not force-push.
+3. Check the PR out locally onto `main`, pull, and delete the `redesign` branch locally and on origin (`git push origin --delete redesign`).
+4. Confirm `git status` is clean, `main` matches `origin/main`, and `git branch -a` shows only `main`.
+
+Do not add files, do not start the next E6 step, and do not touch prompts.txt beyond logging this prompt.
+
+RESPONSE (entry 32):
+Verified the stated facts before acting rather than taking them on trust: clean tree, on redesign, exactly 5 commits ahead, zero commits on main that redesign lacks, gh authenticated, default branch main, and no master on the remote.
+
+PR #1 opened (redesign -> main), body covering the five commits as a table against their E6 step, what is deliberately absent (steps 4-7, so page bodies still carry E1 markup under the new chrome), the two recorded decisions - Priority stays stacked, the priority board never counts up - and the verification numbers. Merged with --merge; confirmed it is a real merge commit (7d3b7d3, two parents), not a squash or a rebase. No force-push anywhere.
+
+Checked out main, fast-forward pulled, deleted redesign locally and on origin, and pruned the stale remote ref. All four confirmations pass: working tree clean, local main and origin/main both at 7d3b7d3, and git branch -a shows only main plus origin/HEAD and origin/main. Default branch is still main and the remote has exactly one head; nothing named master was created and nothing was renamed.
+
+No files added and no E6 step started, as instructed. This log entry is the only change to prompts.txt and is committed on main on its own.
