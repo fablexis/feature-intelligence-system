@@ -66,7 +66,8 @@ export default async function ReviewPage({
   return (
     <AppShell current="/review">
       <PageHeader
-        title="Review queue"
+        eyebrow="Review"
+        title={queue.length === 1 ? '1 match waiting on you' : `${queue.length} matches waiting on you`}
         metrics={
           <>
             <Metric label="waiting on you" value={queue.length} tone="flag" />

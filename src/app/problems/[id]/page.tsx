@@ -158,9 +158,10 @@ export default async function ProblemPage({
   };
 
   return (
-    <AppShell current="/problems" width="max-w-4xl">
+    <AppShell current="/problems">
       <div className="flex flex-col gap-6">
         <PageHeader
+          eyebrow="Problem"
           title={problem.statement}
           metrics={
             <>

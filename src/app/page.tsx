@@ -56,8 +56,9 @@ export default async function Home() {
   const flagged = flaggedCount(db);
 
   return (
-    <AppShell width="max-w-3xl">
+    <AppShell>
       <PageHeader
+        eyebrow="Overview"
         title="Feature intelligence"
         metrics={
           problems.length > 0 ? (

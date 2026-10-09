@@ -117,9 +117,10 @@ export default async function PriorityPage({
   const unscored = rows.filter((r) => !r.effective);
 
   return (
-    <AppShell current="/priority" width="max-w-5xl">
+    <AppShell current="/priority">
       <PageHeader
-        title="Priority"
+        eyebrow="Priority"
+        title="What to work on, and why"
         metrics={
           <>
             {bandCounts.map(({ band, rows: group }) => (

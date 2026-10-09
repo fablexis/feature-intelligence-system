@@ -18,7 +18,8 @@
     "verify:replay": "tsx --env-file-if-exists=.env scripts/verify-replay.ts",
     "ingest": "tsx --env-file-if-exists=.env scripts/ingest.ts",
     "record:demo": "tsx --env-file-if-exists=.env scripts/record-demo.ts",
-    "demo:reset": "tsx --env-file-if-exists=.env scripts/demo-reset.ts"
+    "demo:reset": "tsx --env-file-if-exists=.env scripts/demo-reset.ts",
+    "check:contrast": "tsx scripts/check-contrast.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.90",

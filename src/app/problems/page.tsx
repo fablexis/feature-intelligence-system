@@ -56,9 +56,10 @@ export default async function ProblemsPage() {
   );
 
   return (
-    <AppShell current="/problems" width="max-w-4xl">
+    <AppShell current="/problems">
       <PageHeader
-        title="Problems"
+        eyebrow="Problems"
+        title={`${ranked.length} problems behind ${totals.requests} requests`}
         metrics={
           <>
             <Metric label="problems" value={ranked.length} hint="the right answer is 12" />
